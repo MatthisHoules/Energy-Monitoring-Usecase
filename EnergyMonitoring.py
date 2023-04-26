@@ -1,5 +1,7 @@
 from joulehunter import Profiler
 import pymongo
+import env 
+
 mongo_client = pymongo.MongoClient(env.get("MONGO_ADDRESS"))
 
 mongo_db = mongo_client["energy_monitoring"]
