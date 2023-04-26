@@ -1,6 +1,6 @@
 from joulehunter import Profiler
 import pymongo
-mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
+mongo_client = pymongo.MongoClient(env.get("MONGO_ADDRESS"))
 
 mongo_db = mongo_client["energy_monitoring"]
 monitoring_col = mongo_db["energy"]
