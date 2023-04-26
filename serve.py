@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from joulehunter import Profiler
 from flask import Flask
 import json
 from EnergyMonitoring import EnergyMonitoring
-import requests
 
 def fibonacci(n):
     if(n <= 1):

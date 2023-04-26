@@ -1,4 +1,4 @@
-from joulehunter import Profiler, renderers
+from joulehunter import Profiler
 import pymongo
 mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
 
