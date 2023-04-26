@@ -1,11 +1,17 @@
 from joulehunter import Profiler
 import pymongo
-import env 
+from dotenv import load_dotenv
+import os
 
-mongo_client = pymongo.MongoClient(env.get("MONGO_ADDRESS"))
+# Load .env environment
+load_dotenv()
 
+
+mongo_client = pymongo.MongoClient(os.getenv("MONGO_ADDRESS"))
 mongo_db = mongo_client["energy_monitoring"]
 monitoring_col = mongo_db["energy"]
+
+
 
 class EnergyMonitoring(object):
     """_summary_

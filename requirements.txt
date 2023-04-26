@@ -1,4 +1,5 @@
 flask
 pymongo
 requests
-env
+env 
+python-dotenv
