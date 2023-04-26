@@ -40,7 +40,7 @@ def fibo(n : int):
     
     response = app.response_class(
         response=json.dumps({"Fibanicci, n=20:" :  ct}),
-        status=300,
+        status=200,
         mimetype='application/json'
     )
     
