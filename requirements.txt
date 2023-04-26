@@ -3,3 +3,4 @@ pymongo
 requests
 env 
 python-dotenv
+eventlet

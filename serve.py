@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+# External Imports
 from flask import Flask
 import json
+import eventlet
+from eventlet import wsgi
+
+
+# Internal Imports
 from EnergyMonitoring import EnergyMonitoring
+
 
 def fibonacci(n):
     if(n <= 1):
@@ -42,4 +49,5 @@ def fibo(n : int):
 
 
 if __name__ == "__main__" :
-    app.run(host='0.0.0.0', port=8080)
+    wsgi.server(eventlet.listen(('0.0.0.0', 8080)), app)
+    
