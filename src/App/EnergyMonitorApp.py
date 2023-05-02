@@ -51,7 +51,7 @@ class EnergyMonitorApp(object) :
             rule (str): _description_
         """
         
-        def decorator(f):
+        def register_route(f):
             """_summary_
 
             Args:
@@ -73,7 +73,7 @@ class EnergyMonitorApp(object) :
             ))
             
             @wraps(f)
-            def test(**t) :
+            def route_wrapper(**t) :
                 print(t)
                 g.profiler = Profiler()
                 g.profiler.start()
@@ -99,10 +99,10 @@ class EnergyMonitorApp(object) :
                 print(frame)
                 return response
                 
-            self.app.add_url_rule(rule, endpoint, test, **options)
-            return test
+            self.app.add_url_rule(rule, endpoint, route_wrapper, **options)
+            return route_wrapper
 
-        return decorator
+        return register_route
     # def route(self, rule, **options)
     
     
