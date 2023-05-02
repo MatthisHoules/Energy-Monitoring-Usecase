@@ -5,3 +5,5 @@ env
 python-dotenv
 eventlet
 httpx
+bloompy
+pyinterval
