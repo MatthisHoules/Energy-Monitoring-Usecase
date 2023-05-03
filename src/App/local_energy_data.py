@@ -1,5 +1,8 @@
 from functools import reduce
+
 class LocalEnergyData:
+    """Caching of latest recorded consumption for a single endpoint
+    """
 
     _args_costs : dict[str, list[float]] = dict()
     """ the latest recorded consumption of a function and its called arguments. the callee is mapped by his arguments """

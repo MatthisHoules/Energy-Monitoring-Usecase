@@ -6,7 +6,9 @@ from joulehunter import Profiler
 from .local_energy_data import LocalEnergyData
 
 class EndpointMonitoringService:
-    """ cache of local energy data"""
+    """Service monitoring the energy consumption of a single endpoint. 
+    It also provides the tuning of given arguments
+    """
 
     def __init__(self, name, neighbours = [], threshold = 10) -> None:
         self._name : str = name
