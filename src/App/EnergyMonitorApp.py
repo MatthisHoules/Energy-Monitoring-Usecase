@@ -29,7 +29,7 @@ class EnergyMonitorApp(object) :
         self.__port : int = port
         self.__name : str = name
         self.app = Flask(self.__name)
-        self.endpoints_monitors : dict[str, EndpointMonitoringService]
+        self.endpoints_monitors : dict[str, EndpointMonitoringService] = dict()
         self.monitored_routes : dict = dict()
     # def __init__(self) -> None
     
@@ -72,7 +72,8 @@ class EnergyMonitorApp(object) :
                 options.pop("monitored_params")
             ))
             
-            energy_monitoring_service = EndpointMonitoringService(rule)
+            urls : list[str] = list(options.pop("depends_on", []))
+            energy_monitoring_service = EndpointMonitoringService(rule, urls)
             
             self.endpoints_monitors[rule] = energy_monitoring_service
             
