@@ -29,17 +29,37 @@ def fibo(n : int, i : int):
         ct = fibonacci(n)
     
     response = app.app.response_class(
-        response=json.dumps({f"Fibanicci, n={i}:" :  ct}),
+        response=json.dumps({f"Fibanicci, n={n}:" :  ct}),
         status=200,
         mimetype='application/json'
     )
     
     return response
-# def fibo(n : int)
+# def fibo(n : int, i : int)
+
+
+
+@app.route("/test/<int:n>", methods=["GET"], monitored_params={
+    "n" : [5, 10]
+}, depends_on = {
+    "abcdefg"
+})
+def route2(n : int):
+    ct = fibonacci(n)
+    
+    response = app.app.response_class(
+        response=json.dumps({f"Fibanicci, n={n}:" :  ct}),
+        status=200,
+        mimetype='application/json'
+    )
+    
+    return response
+# def route2(n : int)
+
 
 
 @app.route("/", methods=["GET"])
-def index() :
+def index():
     response = app.app.response_class(
         response=json.dumps("index"),
         status=200,
@@ -47,7 +67,7 @@ def index() :
     )
     
     return response
-
+# def index()
 
 
 app.run()
