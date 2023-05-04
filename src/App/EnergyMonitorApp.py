@@ -1,13 +1,13 @@
 # External Imports
 from flask import request
-from joulehunter import Profiler
 import eventlet
 from eventlet import wsgi
 from flask import Flask, g
 import httpx
-from interval import interval
 from flask import json
 from functools import wraps
+import urllib.parse
+import requests
 
 # Internal Imports
 from .EnergyMonitorRoute import EnergyMonitorRoute
@@ -29,6 +29,8 @@ class EnergyMonitorApp(object) :
         self.__name : str = name
         self.app = Flask(self.__name)
         self.monitored_routes : dict[str, EnergyMonitorRoute] = dict()
+        
+        self.monitoring_endpoint()
     # def __init__(self, host : str, port : int, name : str) -> None
     
     
@@ -41,6 +43,45 @@ class EnergyMonitorApp(object) :
     # def get_app(self)
 
 
+
+    def monitoring_endpoint(self) -> None :
+        """_summary_
+        """
+        
+        
+        @self.app.route("/energy_monitoring")
+        def retreive_monitored_endpoint() :
+            """_summary_
+            """
+            
+            rule = request.args.get('rule', default=None)
+            print("RULE : ", rule)
+            
+            route : EnergyMonitorRoute = self.monitored_routes.get(rule, None)
+            
+            if route is None : 
+                response = self.app.response_class(
+                    response=json.dumps(f"No route {rule}"),
+                    status=404,
+                    mimetype='application/json'
+                )
+                return response
+            
+            
+            route_energy_monitor : dict[str, float] = route.get_local_energy_data().get_avg_costs()
+            
+            
+            response = self.app.response_class(
+                response=json.dumps(route_energy_monitor),
+                status=200,
+                mimetype='application/json'
+            )
+            
+            return response
+        # def retreive_monitored_endpoint(rule : str)
+    # def monitoring_endpoint(self)
+
+    
     
     def route(self, rule, **options) :
         """_summary_
@@ -59,6 +100,9 @@ class EnergyMonitorApp(object) :
                 _type_: _description_
             """
             
+            # Reserved rule for peer to peer energy consumption
+            assert rule != "/energy_monitoring"
+            
             endpoint = options.pop("endpoint", None)
             
             monitored_params = options.pop("monitored_params", None)
@@ -66,7 +110,7 @@ class EnergyMonitorApp(object) :
                 self.app.add_url_rule(rule, endpoint, f, **options)
                 return f
             
-            depends_on_endpoints : list[str] = list(options.pop("depends_on", []))
+            depends_on_endpoints : dict[str, list[str]] = options.pop("depends_on", None)
             
             
             self.__add_monitoring_route(EnergyMonitorRoute(
@@ -78,35 +122,11 @@ class EnergyMonitorApp(object) :
             @wraps(f)
             def route_function_wrapper(**endpoint_function_args):
                 
-                print("RULE : ", rule)
-                response = self.monitored_routes[rule].monitor_function_call(f, **endpoint_function_args)
-        
+                response = f(**endpoint_function_args)
+                # response = self.monitored_routes[rule].monitor_function_call(f, **endpoint_function_args)
 
                 return response
-                # g.profiler = Profiler()
-                # g.profiler.start()
-                # # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-                # # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-                # # monitor & tuning
-                # #   Si <= monitoring
-                # #       Prendre 100%, produit en croix, calcul knn puis monitoring, enregistrer résultat param
-                # #       MCKP Paulopolpogba
 
-
-                # response =  f(**t)
-                # print("response : ", response)
-            
-                # g.profiler.stop()
-                    
-                # frame = g.profiler._get_last_session_or_fail().root_frame()
-                # if frame:
-                #     frame = frame.time()
-                # else:
-                #     frame = 0.0
-                    
-                # print(frame)
-                # return response
-                
             self.app.add_url_rule(rule, endpoint, route_function_wrapper, **options)
             return route_function_wrapper
 
@@ -142,7 +162,7 @@ class EnergyMonitorApp(object) :
     
     
 
-    def run(self) :
+    def run(self) -> None:
         """_summary_
         """
     
@@ -153,5 +173,5 @@ class EnergyMonitorApp(object) :
                 (self.__host, self.__port)
             ), self.app
         )
-    # def run(self)    
+    # def run(self) -> None    
 # class App(object)
