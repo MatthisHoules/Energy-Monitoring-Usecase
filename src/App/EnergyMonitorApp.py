@@ -11,7 +11,6 @@ from functools import wraps
 
 # Internal Imports
 from .EnergyMonitorRoute import EnergyMonitorRoute
-from .endpoint_monitoring_service import EndpointMonitoringService
 
 energy_monitoring_service = ()
 
@@ -29,9 +28,8 @@ class EnergyMonitorApp(object) :
         self.__port : int = port
         self.__name : str = name
         self.app = Flask(self.__name)
-        self.endpoints_monitors : dict[str, EndpointMonitoringService] = dict()
-        self.monitored_routes : dict = dict()
-    # def __init__(self) -> None
+        self.monitored_routes : dict[str, EnergyMonitorRoute] = dict()
+    # def __init__(self, host : str, port : int, name : str) -> None
     
     
     
@@ -51,7 +49,7 @@ class EnergyMonitorApp(object) :
             rule (str): _description_
         """
         
-        def decorator(f):
+        def register_route_in_app(f):
             """_summary_
 
             Args:
@@ -63,51 +61,56 @@ class EnergyMonitorApp(object) :
             
             endpoint = options.pop("endpoint", None)
             
-            if options.get("monitored_params", None) is None :           
+            monitored_params = options.pop("monitored_params", None)
+            if monitored_params is None :           
                 self.app.add_url_rule(rule, endpoint, f, **options)
                 return f
             
+            depends_on_endpoints : list[str] = list(options.pop("depends_on", []))
+            
+            
             self.__add_monitoring_route(EnergyMonitorRoute(
                 rule,
-                options.pop("monitored_params")
+                monitored_params,
+                depends_on_endpoints
             ))
             
-            urls : list[str] = list(options.pop("depends_on", []))
-            energy_monitoring_service = EndpointMonitoringService(rule, urls)
-            
-            self.endpoints_monitors[rule] = energy_monitoring_service
-            
             @wraps(f)
-            def test(**t):
+            def route_function_wrapper(**endpoint_function_args):
                 
-                g.profiler = Profiler()
-                g.profiler.start()
-                # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-                # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-                # monitor & tuning
-                #   Si <= monitoring
-                #       Prendre 100%, produit en croix, calcul knn puis monitoring, enregistrer résultat param
-                #       MCKP Paulopolpogba
+                print("RULE : ", rule)
+                response = self.monitored_routes[rule].monitor_function_call(f, **endpoint_function_args)
+        
 
-
-                response =  f(**t)
-                print("response : ", response)
-            
-                g.profiler.stop()
-                    
-                frame = g.profiler._get_last_session_or_fail().root_frame()
-                if frame:
-                    frame = frame.time()
-                else:
-                    frame = 0.0
-                    
-                print(frame)
                 return response
-                
-            self.app.add_url_rule(rule, endpoint, test, **options)
-            return test
+                # g.profiler = Profiler()
+                # g.profiler.start()
+                # # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+                # # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+                # # monitor & tuning
+                # #   Si <= monitoring
+                # #       Prendre 100%, produit en croix, calcul knn puis monitoring, enregistrer résultat param
+                # #       MCKP Paulopolpogba
 
-        return decorator
+
+                # response =  f(**t)
+                # print("response : ", response)
+            
+                # g.profiler.stop()
+                    
+                # frame = g.profiler._get_last_session_or_fail().root_frame()
+                # if frame:
+                #     frame = frame.time()
+                # else:
+                #     frame = 0.0
+                    
+                # print(frame)
+                # return response
+                
+            self.app.add_url_rule(rule, endpoint, route_function_wrapper, **options)
+            return route_function_wrapper
+
+        return register_route_in_app
     # def route(self, rule, **options)
     
     
@@ -132,9 +135,9 @@ class EnergyMonitorApp(object) :
         
         with c :
             for _, route in self.monitored_routes.items() :
-                for a in route.get_params_combinations() :
-                    for _ in range(10) :
-                        c.get(route.parse_url_with_params(**a))
+                for args in route.get_params_combinations() :
+                    for _ in range(route.get_treshold()) :
+                        c.get(route.parse_url_with_args(**args))
     # def monitor_energy_routes(self)
     
     
