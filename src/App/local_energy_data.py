@@ -29,18 +29,34 @@ class LocalEnergyData:
     
     
     
-    def get_args_avg_cost(self, key : str) -> float:
-        """get_avg_cost
-            TODO
+    def get_avg_costs(self) -> dict[str, float] :
+        """_summary_
+
+        Returns:
+            dict[str, float]: _description_
         """
         
-        costs = self._args_costs.get(key, None)
+        result_dict : dict[str, float] = dict()
+        
+        for arg_combination in self.__args_costs.keys() :
+            result_dict[arg_combination] = self.get_avg_cost_by_args(arg_combination)
+        
+        return result_dict
+    # def get_avg_costs(self) -> dict[str, float]
+    
+    
+    
+    def get_avg_cost_by_args(self, key : str) -> float:
+        """get_avg_cost
+        """
+        
+        costs = self.__args_costs.get(key, None)
         
         if costs is None :
             return 0.0
         
-        return reduce(lambda x, y : x + y, costs) / len(costs)
-    # def get_args_avg_cost(self, key : str) -> float
+        return round(reduce(lambda x, y : x + y, costs) / len(costs), 3)
+    # def get_avg_cost_by_args(self, key : str) -> float
     
     
     
@@ -55,7 +71,5 @@ class LocalEnergyData:
             self.__args_costs[key].append(cost)
         else :
             self.__args_costs[key] = [cost]
-            
-        print(f"New cost added : {self.__args_costs}", self.__args_costs[key])
     # def add_arg_cost(self, key : str, cost : float) -> None
 # class LocalEnergyData

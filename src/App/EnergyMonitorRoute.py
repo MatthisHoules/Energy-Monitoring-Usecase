@@ -21,7 +21,7 @@ class EnergyMonitorRoute(object) :
     
     
     
-    def __init__(self, url : str, monitored_params : dict, depends_on : dict, neighbors : list = [], threshold : int = 10) :
+    def __init__(self, url : str, monitored_params : dict, depends_on : dict[str, list[str]], threshold : int = 10) :
         """_summary_
 
         Args:
@@ -36,9 +36,7 @@ class EnergyMonitorRoute(object) :
         self.__local_energy_data : LocalEnergyData = LocalEnergyData()
         """ counting bloom filter to assess whether to evaluate using the MCKP or not """
         
-        # TODO MEME CHOSE : PAUL QUELLE STRUCTURE DE DONNES MEOW ???
-        self.__neighbors : list = neighbors
-        self.__depends_on : dict = depends_on
+        self.__depends_on : dict[str, list[str]] = depends_on
     # def __init__(self, endpoint : str, url : str, monitored_params : dict)
     
     
@@ -108,7 +106,7 @@ class EnergyMonitorRoute(object) :
         else:
             cost = 0.0
         
-        self.__local_energy_data.add_arg_cost(str(args), cost)
+        self.__local_energy_data.add_arg_cost(str(args), round(cost, 3))
         
         return response
     # def monitor_function_call(self, function, **args)  
@@ -165,4 +163,10 @@ class EnergyMonitorRoute(object) :
         """
         return self.__treshold
     # def get_treshold(self) -> float
+    
+    
+    
+    def get_local_energy_data(self) -> LocalEnergyData :
+        return self.__local_energy_data
+    # def get_local_energy_data(self) -> LocalEnergyData
 # class EnergyMonitorRoute(object)
