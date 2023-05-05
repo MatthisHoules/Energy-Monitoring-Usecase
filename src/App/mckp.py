@@ -40,6 +40,3 @@ def find_path_dp(dp):
         y-=1
     arr.reverse()
     return arr
-v = closest_path([interval([3, 4], [5, 7]), interval[2, 8], interval[6, 8], interval[2, 4], interval[6, 7]], 20)
-
-print(v, sum(v))
