@@ -6,13 +6,13 @@ from flask import Flask, g
 import httpx
 from flask import json
 from functools import wraps
-import urllib.parse
-import requests
+from flask import jsonify, make_response
 
 # Internal Imports
 from .EnergyMonitorRoute import EnergyMonitorRoute
+from .NeighborApp import NeighborApp
 
-energy_monitoring_service = ()
+
 
 class EnergyMonitorApp(object) :
     """_summary_
@@ -20,7 +20,7 @@ class EnergyMonitorApp(object) :
     """
     
     
-    def __init__(self, host : str, port : int, name : str) -> None:
+    def __init__(self, host : str, port : int, name : str, depends_microservices_config_env_filepath : str) -> None:
         """_summary_
         """
         
@@ -29,8 +29,11 @@ class EnergyMonitorApp(object) :
         self.__name : str = name
         self.app = Flask(self.__name)
         self.monitored_routes : dict[str, EnergyMonitorRoute] = dict()
-        
-        self.monitoring_endpoint()
+    
+        with open(depends_microservices_config_env_filepath) as f:
+            self.__neighbors_app_config : dict = json.load(f).get("neighbor_apps")
+
+        self.__add_monitoring_endpoint()
     # def __init__(self, host : str, port : int, name : str) -> None
     
     
@@ -44,10 +47,9 @@ class EnergyMonitorApp(object) :
 
 
 
-    def monitoring_endpoint(self) -> None :
+    def __add_monitoring_endpoint(self) -> None :
         """_summary_
         """
-        
         
         @self.app.route("/energy_monitoring")
         def retreive_monitored_endpoint() :
@@ -55,7 +57,6 @@ class EnergyMonitorApp(object) :
             """
             
             rule = request.args.get('rule', default=None)
-            print("RULE : ", rule)
             
             route : EnergyMonitorRoute = self.monitored_routes.get(rule, None)
             
@@ -67,19 +68,16 @@ class EnergyMonitorApp(object) :
                 )
                 return response
             
+            # TODO RECURSIVITE UNION INTERVAL POUR POLO :)
             
-            route_energy_monitor : dict[str, float] = route.get_local_energy_data().get_avg_costs()
-            
-            
-            response = self.app.response_class(
-                response=json.dumps(route_energy_monitor),
-                status=200,
-                mimetype='application/json'
-            )
+            local_costs = route.get_local_energy_data().get_avg_costs().values()
+            route_energy_monitor : list[int] = [min(local_costs), max(local_costs)]
+                        
+            response = make_response(jsonify(route_energy_monitor), 200)
             
             return response
         # def retreive_monitored_endpoint(rule : str)
-    # def monitoring_endpoint(self)
+    # def __add_monitoring_endpoint(self) -> None
 
     
     
@@ -100,7 +98,7 @@ class EnergyMonitorApp(object) :
                 _type_: _description_
             """
             
-            # Reserved rule for peer to peer energy consumption
+            # This rule is reserved for peer to peer energy consumption communication
             assert rule != "/energy_monitoring"
             
             endpoint = options.pop("endpoint", None)
@@ -110,20 +108,19 @@ class EnergyMonitorApp(object) :
                 self.app.add_url_rule(rule, endpoint, f, **options)
                 return f
             
-            depends_on_endpoints : dict[str, list[str]] = options.pop("depends_on", None)
-            
-            
+            depends_on_endpoints : dict[str, list[str]] = options.pop("depends_on", {})            
             self.__add_monitoring_route(EnergyMonitorRoute(
                 rule,
                 monitored_params,
-                depends_on_endpoints
+                self.__retreive_route_neighbors_endpoints(depends_on_endpoints)
             ))
             
             @wraps(f)
             def route_function_wrapper(**endpoint_function_args):
-                
-                response = f(**endpoint_function_args)
-                # response = self.monitored_routes[rule].monitor_function_call(f, **endpoint_function_args)
+                # TODO MAIN
+                self.monitored_routes[rule].get_neighbouring_enpoints_consumption()
+                 
+                response = self.monitored_routes[rule].monitor_function_call(f, **endpoint_function_args)
 
                 return response
 
@@ -142,7 +139,7 @@ class EnergyMonitorApp(object) :
             energy_monitored_route (EnergyMonitorRoute): _description_
         """
         
-        self.monitored_routes[energy_monitored_route.url] = energy_monitored_route
+        self.monitored_routes[energy_monitored_route.rule] = energy_monitored_route
     # def __add_monitoring_route(self, energy_monitored_route : EnergyMonitorRoute)
 
 
@@ -150,28 +147,57 @@ class EnergyMonitorApp(object) :
     def monitor_energy_routes(self) :
         """_summary_
         """
-        
+        # TODO IGNORE DEPENDS_ON CALLS
         c = httpx.Client(app=self.app, base_url="http://monitoring_routes")
         
         with c :
             for _, route in self.monitored_routes.items() :
                 for args in route.get_params_combinations() :
                     for _ in range(route.get_treshold()) :
-                        c.get(route.parse_url_with_args(**args))
+                        c.get(route.parse_rule_with_args(**args))
     # def monitor_energy_routes(self)
+    
+    
+    
+    def __retreive_route_neighbors_endpoints(self, depends_on_endpoints : dict[str, list[str]]) -> list[NeighborApp] :
+        """_summary_
+
+        Args:
+            depends_on_endpoints (dict[str, list[str]]): _description_
+
+        Returns:
+            list[NeighborApp]: _description_
+        """
+        if depends_on_endpoints == {} : return list()
+        
+        route_neighbors_apps : list[NeighborApp] = list()
+        for neighbor_app_name, neighbor_app_routes in depends_on_endpoints.items() :
+            neighbor_app_config = self.__neighbors_app_config.get(neighbor_app_name)
+            
+            route_neighbors_apps.append(
+                NeighborApp(
+                    neighbor_app_name,
+                    neighbor_app_config.get("host"),
+                    neighbor_app_config.get("port"),
+                    neighbor_app_routes
+                )
+            )
+
+        return route_neighbors_apps        
+    # def __retreive_route_neighbors_endpoints(self, depends_on_endpoints : dict[str, list[str]]) -> list[NeighborApp]
     
     
 
     def run(self) -> None:
         """_summary_
         """
-    
+
         self.monitor_energy_routes()
 
-        eventlet.wsgi.server(
+        wsgi.server(
             eventlet.listen(
                 (self.__host, self.__port)
             ), self.app
         )
-    # def run(self) -> None    
+    # def run(self) -> None
 # class App(object)

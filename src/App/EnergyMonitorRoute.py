@@ -6,7 +6,8 @@ from interval import interval
 import logging
 
 # Internal Imports
-from .local_energy_data import LocalEnergyData
+from .LocalEnergyData import LocalEnergyData
+from .NeighborApp import NeighborApp
       
 
 
@@ -21,37 +22,37 @@ class EnergyMonitorRoute(object) :
     
     
     
-    def __init__(self, url : str, monitored_params : dict, depends_on : dict[str, list[str]], threshold : int = 10) :
+    def __init__(self, rule : str, monitored_params : dict, depends_on : list[NeighborApp] = [], threshold : int = 10) :
         """_summary_
 
         Args:
             endpoint (str): _description_
-            url (str): _description_
+            rule (str): _description_
             monitored_params (dict): _description_
         """
         
-        self.url : str = url
+        self.rule : str = rule
         self.monitored_params : dict = monitored_params
         self.__treshold : int = threshold
         self.__local_energy_data : LocalEnergyData = LocalEnergyData()
         """ counting bloom filter to assess whether to evaluate using the MCKP or not """
         
-        self.__depends_on : dict[str, list[str]] = depends_on
-    # def __init__(self, endpoint : str, url : str, monitored_params : dict)
+        self.__depends_on : list[NeighborApp] = depends_on
+    # def __init__(self, endpoint : str, rule : str, monitored_params : dict)
     
     
     
-    def parse_url_with_args(self, **args) :
+    def parse_rule_with_args(self, **args) :
         """_summary_
 
         Returns:
             _type_: _description_
         """
-                
-        split_url : list = self.url.split('/')
 
-        parsed_url : list = []
-        for s in split_url :
+        split_rule : list = self.rule.split('/')
+
+        parsed_rule : list = []
+        for s in split_rule :
             if len(s) == 0 : continue
 
             if s[0] == '<' :
@@ -61,12 +62,12 @@ class EnergyMonitorRoute(object) :
                 if type_sep_pos != -1 :
                     param_name = param_name[type_sep_pos+1:]
                 
-                parsed_url.append(str(args.get(param_name)))    
+                parsed_rule.append(str(args.get(param_name)))    
             else :
-                parsed_url.append(s)
+                parsed_rule.append(s)
         
-        return '/'.join(parsed_url)
-    # def parse_url_with_args(self, **args)
+        return '/'.join(parsed_rule)
+    # def parse_rule_with_args(self, **args)
     
     
     
@@ -106,7 +107,7 @@ class EnergyMonitorRoute(object) :
         else:
             cost = 0.0
         
-        self.__local_energy_data.add_arg_cost(str(args), round(cost, 3))
+        self.__local_energy_data.add_arg_cost(str(args), round(cost*1000, 0))
         
         return response
     # def monitor_function_call(self, function, **args)  
@@ -120,14 +121,14 @@ class EnergyMonitorRoute(object) :
             objective (float): _description_
             arguments (list[float]): _description_
         """
-        
+
         if objective < 0:
             logging.warn(f"{self._name} has not objective defined.")
             pass
         logging.info(f"{self._name} has an objective of {objective}")
 
         endpoints = self.get_neighbouring_enpoints_consumption() # TODO : coder
-        
+
         if self._filter.count > self._threshold :
             pass
         else:
@@ -143,14 +144,20 @@ class EnergyMonitorRoute(object) :
 
 
 
-    def get_neighbouring_enpoints_consumption() -> dict[str, interval]:
-        """Returns a map containing the consumption of all neighbouring endpoints, keyed by their URL 
+    def get_neighbouring_enpoints_consumption(self) -> dict[str, interval]:
+        """Returns a map containing the consumption of all neighbouring endpoints, keyed by their rule 
 
         Returns:
-            dict[str, interval]: a map { URL -> consumption interval }
+            dict[str, interval]: a map { rule -> consumption interval }
         """
-        # TODO
-        pass
+        
+        neighbouring_endpoints_consumption_intervals : dict[str, interval] = dict()
+        for neighbor_app in self.__depends_on :
+            
+            
+            print(neighbor_app.request_energy_monitoring())
+            # TODO
+            pass
     # def get_neighbouring_enpoints_consumption() -> dict[str, interval]
     
     
