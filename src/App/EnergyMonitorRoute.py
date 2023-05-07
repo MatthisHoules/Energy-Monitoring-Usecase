@@ -113,6 +113,22 @@ class EnergyMonitorRoute(object) :
     # def monitor_function_call(self, function, **args)  
     
     
+    def get_route_cost(self) -> interval :
+        print("\n"*5, "RULE : ", self.rule)
+        local_cost : interval = self.get_local_energy_data().get_cost_interval()
+        print("local cost : ", local_cost)
+        # neighbor
+        if self.is_route_dependent() :
+            neigbors_costs : interval = self.get_neighbouring_enpoints_consumption()
+            print("neighbors costs : ", neigbors_costs)
+            total_cost : interval = local_cost + neigbors_costs
+            print("total cost : ", total_cost)
+            return total_cost
+        
+        return local_cost
+    # def get_route_cost(self) -> interval
+    
+    
     
     def process_arguments(self, objective : float, arguments : list[float]):
         """process_arguments
@@ -144,20 +160,20 @@ class EnergyMonitorRoute(object) :
 
 
 
-    def get_neighbouring_enpoints_consumption(self) -> dict[str, interval]:
+    def get_neighbouring_enpoints_consumption(self) -> interval :
         """Returns a map containing the consumption of all neighbouring endpoints, keyed by their rule 
 
         Returns:
             dict[str, interval]: a map { rule -> consumption interval }
         """
+        neighbouring_endpoints_consumption_intervals : list[interval] = list()
         
-        neighbouring_endpoints_consumption_intervals : dict[str, interval] = dict()
         for neighbor_app in self.__depends_on :
-            
-            
-            print(neighbor_app.request_energy_monitoring())
-            # TODO
-            pass
+            neighbouring_endpoints_consumption_intervals.append(
+                neighbor_app.request_energy_monitoring()
+            )
+        
+        return sum(neighbouring_endpoints_consumption_intervals)
     # def get_neighbouring_enpoints_consumption() -> dict[str, interval]
     
     
@@ -170,6 +186,12 @@ class EnergyMonitorRoute(object) :
         """
         return self.__treshold
     # def get_treshold(self) -> float
+    
+    
+    
+    def is_route_dependent(self) -> bool :
+        return len(self.__depends_on) > 0
+    # def is_route_dependent(self) -> bool
     
     
     

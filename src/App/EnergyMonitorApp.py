@@ -1,12 +1,16 @@
 # External Imports
-from flask import request
+from flask import Flask, g, json, jsonify, make_response, request
+
 import eventlet
 from eventlet import wsgi
-from flask import Flask, g
+
 import httpx
-from flask import json
+
 from functools import wraps
-from flask import jsonify, make_response
+
+from interval import interval
+
+
 
 # Internal Imports
 from .EnergyMonitorRoute import EnergyMonitorRoute
@@ -57,7 +61,6 @@ class EnergyMonitorApp(object) :
             """
             
             rule = request.args.get('rule', default=None)
-            
             route : EnergyMonitorRoute = self.monitored_routes.get(rule, None)
             
             if route is None : 
@@ -68,13 +71,10 @@ class EnergyMonitorApp(object) :
                 )
                 return response
             
-            # TODO RECURSIVITE UNION INTERVAL POUR POLO :)
+            # here total_cost is only local cost
+            total_cost : interval = route.get_route_cost()
             
-            local_costs = route.get_local_energy_data().get_avg_costs().values()
-            route_energy_monitor : list[int] = [min(local_costs), max(local_costs)]
-                        
-            response = make_response(jsonify(route_energy_monitor), 200)
-            
+            response = make_response(jsonify(list(total_cost)), 200)
             return response
         # def retreive_monitored_endpoint(rule : str)
     # def __add_monitoring_endpoint(self) -> None
@@ -108,7 +108,8 @@ class EnergyMonitorApp(object) :
                 self.app.add_url_rule(rule, endpoint, f, **options)
                 return f
             
-            depends_on_endpoints : dict[str, list[str]] = options.pop("depends_on", {})            
+            depends_on_endpoints : dict[str, list[str]] = options.pop("depends_on", {})
+                 
             self.__add_monitoring_route(EnergyMonitorRoute(
                 rule,
                 monitored_params,
@@ -118,7 +119,7 @@ class EnergyMonitorApp(object) :
             @wraps(f)
             def route_function_wrapper(**endpoint_function_args):
                 # TODO MAIN
-                self.monitored_routes[rule].get_neighbouring_enpoints_consumption()
+                self.monitored_routes[rule].get_route_cost()
                  
                 response = self.monitored_routes[rule].monitor_function_call(f, **endpoint_function_args)
 
@@ -173,7 +174,7 @@ class EnergyMonitorApp(object) :
         route_neighbors_apps : list[NeighborApp] = list()
         for neighbor_app_name, neighbor_app_routes in depends_on_endpoints.items() :
             neighbor_app_config = self.__neighbors_app_config.get(neighbor_app_name)
-            
+            print("neighbor route creation : ", neighbor_app_routes)
             route_neighbors_apps.append(
                 NeighborApp(
                     neighbor_app_name,

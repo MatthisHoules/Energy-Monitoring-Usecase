@@ -1,4 +1,7 @@
+# External Imports
 from functools import reduce
+from interval import interval
+
 
 class LocalEnergyData(object):
     """Caching of latest recorded consumption for a single endpoint
@@ -9,6 +12,7 @@ class LocalEnergyData(object):
         """
         
         self.__args_costs : dict[str, list[int]] = dict()
+        self.__error_cost : int = 100
         """the latest recorded consumption of a function and its called arguments. the callee is mapped by his arguments"""
     # def __init__(self) -> None
 
@@ -29,24 +33,36 @@ class LocalEnergyData(object):
     
     
     
-    def get_avg_costs(self) -> dict[str, int] :
+    def get_cost_interval(self) -> interval :
         """_summary_
 
         Returns:
             dict[str, float]: _description_
         """
         
-        result_dict : dict[str, int] = dict()
+        intervals : list[interval] = []
         
         for arg_combination in self.__args_costs.keys() :
-            result_dict[arg_combination] = self.get_avg_cost_by_args(arg_combination)
-        
-        return result_dict
-    # def get_avg_costs(self) -> dict[str, int]
+            avg_cost = self.get_avg_cost_by_args(arg_combination)
+            
+            print(arg_combination, interval([
+                    avg_cost - self.__error_cost if avg_cost - self.__error_cost >= 0 else 0,
+                    avg_cost + self.__error_cost
+            ]))
+            
+            intervals.append(
+                interval([
+                    avg_cost - self.__error_cost if avg_cost - self.__error_cost >= 0 else 0,
+                    avg_cost + self.__error_cost
+                ])
+            )
+
+        return interval.union(intervals)
+    # def get_cost_interval(self) -> dict[str, int]
     
     
     
-    def get_avg_cost_by_args(self, key : str) -> int:
+    def get_avg_cost_by_args(self, key : str) -> int: 
         """get_avg_cost
         """
         

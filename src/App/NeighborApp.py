@@ -31,6 +31,9 @@ class NeighborApp(object) :
     # def __init__(self, host : str, port : int) -> None
     
     
+    def get_name(self) -> str :
+        return self.__name
+
     
     def __rule_url_encode(self, rule : str) -> str:
         """_summary_
@@ -41,41 +44,31 @@ class NeighborApp(object) :
         
         return urllib.parse.quote(rule)
     # def __rule_url_encode(self, rule : str) -> str
-
-
-    
-    def __request_energy_interval_rule(self, rule) -> Response:
-        """_summary_
-
-        Args:
-            rule (_type_): _description_
-        """
-        
-        response : Response = requests.get(
-            f"http://{self.__host}:{self.__port}/energy_monitoring?rule={self.__rule_url_encode(rule)}"
-        )
-        
-        return response
-    # def __request_energy_monitoring_rule(self, rule) -> Response
     
     
     
-    def request_energy_monitoring(self) -> dict[str, interval] :
+    def request_energy_monitoring(self) -> interval :
         """_summary_
 
         Returns:
             dict[str, int]: _description_
         """
         
-        
-        r_dict : dict = dict()
+        rules_intervals : list[interval] = list()
         for rule in self.__endpoint_rules :
-            r = self.__request_energy_interval_rule(rule).json()
-            assert len(r) == 2
+            print('computing rule', rule)
+            response_interval_data = requests.get(
+                f"http://{self.__host}:{self.__port}/energy_monitoring?rule={self.__rule_url_encode(rule)}"
+            ).json()
             
-            r_dict[rule] = interval([r[0], r[1]])
-        
-        return r_dict
+            print("rule result : ", interval(*response_interval_data))
+                        
+            rules_intervals.append(
+                interval(*response_interval_data)
+            )
+
+        print("all intervals : ", rules_intervals)
+        return sum(rules_intervals)
     # def request_energy_monitoring(self) -> dict[str, interval]
 # class NeighborApp(object)  
  
