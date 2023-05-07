@@ -1,16 +1,11 @@
 # External Imports
-from flask import Flask, g, json, jsonify, make_response, request
-
+from flask import Flask, g, json, jsonify, make_response, request, Response
+import requests
 import eventlet
 from eventlet import wsgi
-
 import httpx
-
 from functools import wraps
-
 from interval import interval
-
-
 
 # Internal Imports
 from .EnergyMonitorRoute import EnergyMonitorRoute
@@ -119,7 +114,7 @@ class EnergyMonitorApp(object) :
             @wraps(f)
             def route_function_wrapper(**endpoint_function_args):
                 # get monitoring header
-                user_cost_target : int = request.headers.get('x-user-energy-objective', None)
+                user_cost_target : int = self.__get_user_energy_objective()
                 
                 if user_cost_target is None :
                     response = f(**endpoint_function_args)
@@ -208,4 +203,22 @@ class EnergyMonitorApp(object) :
             ), self.app
         )
     # def run(self) -> None
+    
+    
+    
+    def __get_user_energy_objective(self) -> int : 
+        user_cost_target : int = request.headers.get('x-user-energy-objective', None)
+        
+        if user_cost_target is None : 
+            return 100
+        
+        if user_cost_target < 10 :
+            user_cost_target = 10
+        elif user_cost_target > 100 : 
+            user_cost_target = 100
+        elif type(user_cost_target) is float :
+            user_cost_target = int(user_cost_target)
+        
+        return user_cost_target
+    # def __get_user_energy_objective(self) -> int        
 # class App(object)

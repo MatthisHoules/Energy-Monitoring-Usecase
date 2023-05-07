@@ -5,6 +5,8 @@ from requests import Response
 from interval import interval
 
 
+# Internal Imports
+from ..Request.Request import EnergyMonitoringRequests
 
 class NeighborApp(object) :
     """_summary_
@@ -57,7 +59,7 @@ class NeighborApp(object) :
         rules_intervals : list[interval] = list()
         for rule in self.__endpoint_rules :
             print('computing rule', rule)
-            response_interval_data = requests.get(
+            response_interval_data = EnergyMonitoringRequests.get(
                 f"http://{self.__host}:{self.__port}/energy_monitoring?rule={self.__rule_url_encode(rule)}"
             ).json()
             

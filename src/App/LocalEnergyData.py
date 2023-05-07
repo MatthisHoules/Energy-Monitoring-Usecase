@@ -1,6 +1,7 @@
 # External Imports
 from functools import reduce
 from interval import interval
+from sklearn.neighbors import KNeighborsRegressor
 
 # TODO SKLEARN KNN
 class LocalEnergyData(object):
