@@ -113,13 +113,14 @@ class EnergyMonitorApp(object) :
             
             @wraps(f)
             def route_function_wrapper(**endpoint_function_args):
-                # get monitoring header
+                # get user energy objective
                 user_cost_target : int = self.__get_user_energy_objective()
                 
                 if user_cost_target is None :
                     response = f(**endpoint_function_args)
                     return response
                 
+                # TODO Treshold >< MCKP ...
                 # TODO MAIN
                 self.monitored_routes[rule].get_route_cost()
                  

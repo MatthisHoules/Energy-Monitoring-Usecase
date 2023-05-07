@@ -2,24 +2,34 @@
 from functools import reduce
 from interval import interval
 from sklearn.neighbors import KNeighborsRegressor
+import yaml
+
+
 
 # TODO SKLEARN KNN
+# TODO Refacto : LocalEnergyData in EnergyMonitoringRoute ?
+# TODO remove prints
 class LocalEnergyData(object):
     """Caching of latest recorded consumption for a single endpoint
     """
 
-    def __init__(self) -> None :
+    def __init__(self, treshold : int, n_monitored_args : int) -> None :
         """__init__
         """
         
         self.__args_costs : dict[str, list[int]] = dict()
-        self.__error_cost : int = 100
         """the latest recorded consumption of a function and its called arguments. the callee is mapped by his arguments"""
+
+        self.__error_cost : int = 100
+        self.__treshold : int = treshold
+        self.__cost_to_args : list[tuple[int, dict[str, int]]] = list()
+        self.__n_monitored_args : int = n_monitored_args
+        self.__knn_model : KNeighborsRegressor = KNeighborsRegressor(weights="distance")
     # def __init__(self) -> None
 
 
 
-    def contains_args(self, key : str) -> bool:
+    def contains_args(self, key : str) -> bool :
         """_summary_
 
         Args:
@@ -86,7 +96,32 @@ class LocalEnergyData(object):
         
         if self.contains_args(key) :
             self.__args_costs[key].append(cost)
+            
+            if len(self.__args_costs[key]) == self.__treshold :
+                key_dict : dict = yaml.load(key, Loader=yaml.FullLoader)
+                self.__cost_to_args.append(
+                    (cost, key_dict)
+                )
+                self.__retrain_knn_model()
+            
         else :
             self.__args_costs[key] = [cost]
     # def add_arg_cost(self, key : str, cost : float) -> None
-# class LocalEnergyData
+    
+    
+    
+    def __retrain_knn_model(self) -> None :
+        """_summary_
+        """
+        
+        cost, args = zip(*self.__cost_to_args)
+
+        self.__knn_model = KNeighborsRegressor(n_neighbors=self.__n_monitored_args, weights="distance")
+        self.__knn_model.fit(
+            cost,
+            args
+        )
+    # def __retrain_knn_model(self) -> None
+    
+    
+# class LocalEnergyData(object)

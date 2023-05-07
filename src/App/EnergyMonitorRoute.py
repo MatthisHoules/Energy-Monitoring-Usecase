@@ -20,8 +20,6 @@ class EnergyMonitorRoute(object) :
     
     filter : CountingBloomFilter = CountingBloomFilter
     
-    
-    
     def __init__(self, rule : str, monitored_params : dict, depends_on : list[NeighborApp] = [], threshold : int = 10) :
         """_summary_
 
@@ -34,9 +32,7 @@ class EnergyMonitorRoute(object) :
         self.rule : str = rule
         self.monitored_params : dict = monitored_params
         self.__treshold : int = threshold
-        self.__local_energy_data : LocalEnergyData = LocalEnergyData()
-        """ counting bloom filter to assess whether to evaluate using the MCKP or not """
-        
+        self.__local_energy_data : LocalEnergyData = LocalEnergyData(self.__treshold, len(monitored_params))        
         self.__depends_on : list[NeighborApp] = depends_on
     # def __init__(self, endpoint : str, rule : str, monitored_params : dict)
     

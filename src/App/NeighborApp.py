@@ -8,6 +8,8 @@ from interval import interval
 # Internal Imports
 from ..Request.Request import EnergyMonitoringRequests
 
+
+# TODO remove prints
 class NeighborApp(object) :
     """_summary_
 
@@ -35,6 +37,7 @@ class NeighborApp(object) :
     
     def get_name(self) -> str :
         return self.__name
+    # def get_name(self) -> str
 
     
     def __rule_url_encode(self, rule : str) -> str:
