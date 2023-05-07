@@ -76,4 +76,5 @@ class TestMCKP(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+    print(closest_path([interval(3, 4), interval(4, 5), interval(2, 6), interval(7, 10)], 22), [4, 5, 6, 7])

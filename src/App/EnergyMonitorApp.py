@@ -118,6 +118,13 @@ class EnergyMonitorApp(object) :
             
             @wraps(f)
             def route_function_wrapper(**endpoint_function_args):
+                # get monitoring header
+                user_cost_target : int = request.headers.get('x-user-energy-objective', None)
+                
+                if user_cost_target is None :
+                    response = f(**endpoint_function_args)
+                    return response
+                
                 # TODO MAIN
                 self.monitored_routes[rule].get_route_cost()
                  
@@ -184,7 +191,7 @@ class EnergyMonitorApp(object) :
                 )
             )
 
-        return route_neighbors_apps        
+        return route_neighbors_apps
     # def __retreive_route_neighbors_endpoints(self, depends_on_endpoints : dict[str, list[str]]) -> list[NeighborApp]
     
     

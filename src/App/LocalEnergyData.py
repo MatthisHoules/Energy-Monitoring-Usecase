@@ -2,7 +2,7 @@
 from functools import reduce
 from interval import interval
 
-
+# TODO SKLEARN KNN
 class LocalEnergyData(object):
     """Caching of latest recorded consumption for a single endpoint
     """
