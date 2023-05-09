@@ -3,7 +3,7 @@ import unittest
 from interval import interval
 from functools import reduce
 
-def closest_path(intervals : dict[str, interval], max_target) -> dict[str, int]:
+def closest_path(intervals : dict[str, interval], target) -> dict[str, int]:
     """MCKP implementation. 
     
     Takes the minimal value of each interval ranges (ex [1, 4] U [8, 10] takes 1 and 8) and returns 
@@ -12,12 +12,12 @@ def closest_path(intervals : dict[str, interval], max_target) -> dict[str, int]:
 
     Args:
         intervals (dict[str, interval]): the map of interval {endpoint_name : interval_range}
-        max_target (_type_): the maximum target sum
+        target (_type_): the target sum
 
     Returns:
         dict[str, int]: a map {endpoint_name : cost}
     """
-    if max_target <= 0:
+    if target <= 0:
         return {}
     keys = list(intervals.keys())
     if not len(keys):
@@ -25,21 +25,21 @@ def closest_path(intervals : dict[str, interval], max_target) -> dict[str, int]:
     
     values : list[list[int]] = [sorted([int(bounds[0]) for bounds in interv]) for interv in intervals.values()]
     min  = reduce(lambda acc, list : acc + list[0], values, 0)
-    if max_target <= min:
+    if target <= min:
         return { keys[i] : values[i][0] for i in range(len(values)) }
     
-    dp = [[0 for _ in range(max_target + 1)] for _ in range(len(values))]
-    last = [-1] * (max_target + 1)
+    dp = [[0 for _ in range(target + 1)] for _ in range(len(values))]
+    last = [-1] * (target + 1)
 
     for i in range(len(values[0])):
-        if values[0][i] < max_target:
+        if values[0][i] < target:
             last[values[0][i]] = values[0][i]
             dp[0][values[0][i]] = values[0][i]
 
     for i in range(1, len(values)):
-        current = [-1] * (max_target + 1)
+        current = [-1] * (target + 1)
         for i_n in values[i]:
-            for w in range(i_n, max_target + 1):
+            for w in range(i_n, target + 1):
                 if last[w - i_n] > 0:
                     current[w] = max(current[w], last[w - i_n] + i_n)
                     dp[i][w] = current[w] - last[w - i_n]
