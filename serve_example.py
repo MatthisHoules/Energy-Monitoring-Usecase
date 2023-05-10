@@ -1,6 +1,7 @@
 # External Imports
 import json
 
+
 # Internal Imports
 from src.App.EnergyMonitorApp import EnergyMonitorApp
 
@@ -18,7 +19,6 @@ app = EnergyMonitorApp(
     "t1",
     "config.json"
 )
-
 
 @app.route("/fibo/<int:n>/<int:i>", methods=["GET"], monitored_params={
     "n" : [5, 10],
