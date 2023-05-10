@@ -10,3 +10,4 @@ pyinterval
 scikit-learn
 pyyaml
 pandas
+flask-cors
