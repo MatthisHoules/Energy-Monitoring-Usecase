@@ -126,7 +126,7 @@ class EnergyMonitorRoute(object) :
     
     
     
-    def process_arguments(self, objective : float) -> tuple[dict[str, int], list[float]]:
+    def process_arguments(self, objective : float, available : int | None) -> tuple[dict[str, int], list[float]]:
         """process_arguments
 
         Args:
@@ -137,23 +137,23 @@ class EnergyMonitorRoute(object) :
         if objective < 0:
             logging.warn(f"{self.rule} has not objective defined.")
             pass 
-        logging.info(f"{self.rule} has an objective of {objective}")
+        print(f"{self.rule} has an objective of {objective}, with an availability of {available}")
 
-        endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='_')
+        endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='/')
         endpoints[self.rule] = self.__local_energy_data.get_cost_interval()
 
-        distributed = self.distribute_objective(objective / 100, endpoints)
+        distributed = self.distribute_objective(objective / 100, endpoints, available)
 
         return (distributed, self.__local_energy_data.predict_args_from_cost(distributed[self.rule]))
     # def process_arguments(self, objective : float, arguments: list[float])
 
 
-    def distribute_objective(self, objective : float, endpoints_costs : dict[str, interval]) -> dict[str, int]:
+    def distribute_objective(self, objective : float, endpoints_costs : dict[str, interval], target : int | None) -> dict[str, int]:
         (min_cost, max_cost) = interval_helper.intervals_bounds(endpoints_costs.values())
 
-        print(objective)
-        target = max_cost * objective
-        print(f"{min_cost}, {target}")
+        if target is None:
+            target = max_cost * objective
+
         if target <= min_cost:
             return {k: interval_helper.interval_min(v) for k, v in endpoints_costs.items()}
 
@@ -190,7 +190,7 @@ class EnergyMonitorRoute(object) :
         
         result_dict : dict[str, dict[str, interval]] = dict()
         for neighbor in self.__depends_on :
-            result_dict[neighbor.get_name()] = neighbor.request_energy_monitoring()
+            result_dict[neighbor.get_base_url()] = neighbor.request_energy_monitoring()
             
         return result_dict
     # def get_neighbouring_enpoints_consumption() -> dict[str, interval]
