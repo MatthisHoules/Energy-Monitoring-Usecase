@@ -1,16 +1,15 @@
 # External Imports
 import itertools
-from bloompy import CountingBloomFilter
 from joulehunter import Profiler
-from interval import interval, fpu
+from interval import interval
 from flask import request
 import logging
 from pandas.io.json._normalize import nested_to_record    
-
+from functools import reduce
 # Internal Imports
 from .LocalEnergyData import LocalEnergyData
 from .NeighborApp import NeighborApp
-from . import mckp
+from . import mckp, interval_helper
       
 
 # TODO Documentation
@@ -23,7 +22,7 @@ class EnergyMonitorRoute(object) :
     """
     
     
-    def __init__(self, rule : str, monitored_params : dict, depends_on : list[NeighborApp] = [], threshold : int = 10) :
+    def __init__(self, rule : str, monitored_params : dict, depends_on : list[NeighborApp] = [], threshold : int = 50) :
         """_summary_
 
         Args:
@@ -142,20 +141,41 @@ class EnergyMonitorRoute(object) :
 
         endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='_')
         endpoints[self.rule] = self.__local_energy_data.get_cost_interval()
-        
-        m = sum([max(i.extrema)[1] for i in endpoints.values()])
-    
-        costs = self.distribute_objective(int(m * objective / 100), endpoints)
-        return (endpoints, self.__local_energy_data.predict_args_from_cost(costs[self.rule]))
+
+        distributed = self.distribute_objective(objective / 100, endpoints)
+
+        return (distributed, self.__local_energy_data.predict_args_from_cost(distributed[self.rule]))
     # def process_arguments(self, objective : float, arguments: list[float])
 
 
+    def distribute_objective(self, objective : float, endpoints_costs : dict[str, interval]) -> dict[str, int]:
+        (min_cost, max_cost) = interval_helper.intervals_bounds(endpoints_costs.values())
 
-    def distribute_objective(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
+        print(objective)
+        target = max_cost * objective
+        print(f"{min_cost}, {target}")
+        if target <= min_cost:
+            return {k: interval_helper.interval_min(v) for k, v in endpoints_costs.items()}
+
+        surplus = target - min_cost
+        given_costs = {}
+        for endpoint_name, costs in endpoints_costs.items():
+            given = interval_helper.interval_min(costs) + surplus * objective * interval_helper.interval_max(costs) / max_cost
+            given_costs[endpoint_name] = int(given)
+        
+        print(f"\n target : {target}, given {sum(given_costs.values())} \n Repartition : {given_costs}")
+        return given_costs
+
+    def distribute_objective_mckp(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
         
         minimal_costs = mckp.closest_path(endpoints_costs, objective)
-        distributed = sum(minimal_costs.values())
-        print(f"distributed {distributed} out of {objective}")
+        
+        remaining = objective - sum(minimal_costs.values())
+
+        shares = len(minimal_costs)
+        for endpoint_name, cost in minimal_costs.items():
+            share_amount = remaining / shares
+        
         return minimal_costs
     # def distribute_objective(objective : float, endpoints_costs : dict[str, interval])
 
