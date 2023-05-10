@@ -123,7 +123,7 @@ class EnergyMonitorRoute(object) :
         if self.is_route_dependent() :
             neigbors_costs : dict[str, interval] = self.get_neighbouring_endpoints_consumption()
             print("neighbors costs : ", neigbors_costs)
-            total_cost : interval = local_cost + sum(neigbors_costs.keys()) # TODO : Average ??
+            total_cost : interval = local_cost + sum(neigbors_costs.values()) # TODO : Average ??
             print("total cost : ", total_cost)
             return total_cost
         
@@ -146,20 +146,20 @@ class EnergyMonitorRoute(object) :
         logging.info(f"{self.rule} has an objective of {objective}")
 
         endpoints = self.get_neighbouring_endpoints_consumption() # TODO : coder
-
-        if self.__filter.count > self.__threshold :
-            self.distribute_objective(objective, endpoints)
-        else:
-            pass
+        endpoints[self.rule] = self.__local_energy_data.get_cost_interval()
+        costs = self.distribute_objective(objective, endpoints)
+        print(costs)
+        return (endpoints, self.__local_energy_data.predict_args_from_cost(costs[self.rule]))
     # def process_arguments(self, objective : float, arguments: list[float])
 
 
 
     def distribute_objective(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
+        print(f"obj : {objective}, costs : {endpoints_costs}")
         minimal_costs = mckp.closest_path(endpoints_costs, objective)
         distributed = sum(minimal_costs.values())
-        print(distributed)
-        pass
+        print(f"distributed {distributed} out of {objective}")
+        return minimal_costs
     # def distribute_objective(objective : float, endpoints_costs : dict[str, interval])
 
 

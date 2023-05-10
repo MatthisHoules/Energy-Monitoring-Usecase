@@ -28,7 +28,7 @@ def closest_path(intervals : dict[str, interval], target) -> dict[str, int]:
     if target <= min:
         return { keys[i] : values[i][0] for i in range(len(values)) }
     
-    dp = [[0 for _ in range(target + 1)] for _ in range(len(values))]
+    dp = [[-1 for _ in range(target + 1)] for _ in range(len(values))]
     last = [-1] * (target + 1)
 
     for i in range(len(values[0])):
@@ -61,7 +61,7 @@ def find_path_dp(dp: list[list[int]], endpoints_name : list[str]) -> dict[str, i
     """
     y = len(dp) - 1
     x = len(dp[y]) - 1
-    while dp[y][x] <= 0: 
+    while dp[y][x] < 0: 
         x -= 1
     arr = {}
     while y >= 0:

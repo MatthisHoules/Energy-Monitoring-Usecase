@@ -54,6 +54,7 @@ class EnergyMonitorApp(object) :
         def retreive_monitored_endpoint() :
             """_summary_
             """
+            print('starting computing cost of {rule}')
             
             rule = request.args.get('rule', default=None)
             route : EnergyMonitorRoute = self.monitored_routes.get(rule, None)
@@ -67,7 +68,6 @@ class EnergyMonitorApp(object) :
                 return response
             
 
-            print('starting computing cost of {rule}')
             # here total_cost is only local cost
             total_cost : interval = route.get_route_cost()
             
@@ -85,11 +85,7 @@ class EnergyMonitorApp(object) :
             rule (str): _description_
         """
         
-<<<<<<< HEAD
-        def register_route(f):
-=======
         def register_route_in_app(f):
->>>>>>> feat/energy-service
             """_summary_
 
             Args:
@@ -118,27 +114,15 @@ class EnergyMonitorApp(object) :
             ))
             
             @wraps(f)
-<<<<<<< HEAD
-            def route_wrapper(**t) :
-                print(t)
-                g.profiler = Profiler()
-                g.profiler.start()
-=======
             def route_function_wrapper(**endpoint_function_args):
                 # get user energy objective
                 user_cost_target : int | None = self.__get_user_energy_objective()
                 args = endpoint_function_args
->>>>>>> feat/energy-service
                 
                 if user_cost_target is not None :
                     (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target)
+                    print(f"endpoints : {endpoints_costs}, args : {args}")
                 
-<<<<<<< HEAD
-            self.app.add_url_rule(rule, endpoint, route_wrapper, **options)
-            return route_wrapper
-
-        return register_route
-=======
                 # TODO Treshold >< MCKP ...
                 # TODO MAIN
                  
@@ -150,7 +134,6 @@ class EnergyMonitorApp(object) :
             return route_function_wrapper
 
         return register_route_in_app
->>>>>>> feat/energy-service
     # def route(self, rule, **options)
     
     

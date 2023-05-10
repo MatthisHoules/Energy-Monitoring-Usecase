@@ -22,7 +22,7 @@ class LocalEnergyData(object):
         self.__args_costs : dict[str, list[int]] = dict()
         """the latest recorded consumption of a function and its called arguments. the callee is mapped by his arguments"""
 
-        self.__error_cost : int = 100
+        self.__error_cost : int = 20
         self.__treshold : int = treshold
         self.__cost_to_args : list[tuple[int, dict[str, int]]] = list()
         self.__n_monitored_args : int = n_monitored_args
@@ -59,13 +59,13 @@ class LocalEnergyData(object):
             avg_cost = self.get_avg_cost_by_args(arg_combination)
             
             print(arg_combination, interval([
-                    avg_cost - self.__error_cost if avg_cost - self.__error_cost >= 0 else 0,
+                    avg_cost - self.__error_cost if avg_cost - self.__error_cost >= 0 else 1,
                     avg_cost + self.__error_cost
             ]))
             
             intervals.append(
                 interval([
-                    avg_cost - self.__error_cost if avg_cost - self.__error_cost >= 0 else 0,
+                    avg_cost - self.__error_cost if avg_cost - self.__error_cost >= 0 else 1,
                     avg_cost + self.__error_cost
                 ])
             )
@@ -133,6 +133,6 @@ class LocalEnergyData(object):
         predictions : dict[str, float] = self.__knn_model.predict([[cost]])
         # TODO Verify good type for predictions var
         # TODO predictions to dict[str, int]
-        pass
+        return {k : int(v) for k, v in predictions.items()}
     # def predict_args_from_cost(self, cost : int) -> dict[str, int] 
 # class LocalEnergyData(object)
