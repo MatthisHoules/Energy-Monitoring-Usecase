@@ -3,11 +3,13 @@ import itertools
 from bloompy import CountingBloomFilter
 from joulehunter import Profiler
 from interval import interval
+from flask import request
 import logging
 
 # Internal Imports
 from .LocalEnergyData import LocalEnergyData
 from .NeighborApp import NeighborApp
+from . import mckp
       
 
 
@@ -18,7 +20,6 @@ class EnergyMonitorRoute(object) :
         object (_type_): _description_
     """
     
-    filter : CountingBloomFilter = CountingBloomFilter
     
     def __init__(self, rule : str, monitored_params : dict, depends_on : list[NeighborApp] = [], threshold : int = 10) :
         """_summary_
@@ -31,9 +32,11 @@ class EnergyMonitorRoute(object) :
         
         self.rule : str = rule
         self.monitored_params : dict = monitored_params
-        self.__treshold : int = threshold
-        self.__local_energy_data : LocalEnergyData = LocalEnergyData(self.__treshold, len(monitored_params))        
+        self.__threshold : int = threshold
+        self.__local_energy_data : LocalEnergyData = LocalEnergyData(self.__threshold, len(monitored_params))        
         self.__depends_on : list[NeighborApp] = depends_on
+        self.__filter : CountingBloomFilter = CountingBloomFilter
+
     # def __init__(self, endpoint : str, rule : str, monitored_params : dict)
     
     
@@ -92,7 +95,8 @@ class EnergyMonitorRoute(object) :
         
         profiler : Profiler = Profiler(interval=.0001)
         profiler.start()
-        
+
+        # TODO : Process arguments
         response = function(**args)
 
         profiler.stop()
@@ -115,9 +119,9 @@ class EnergyMonitorRoute(object) :
         print("local cost : ", local_cost)
         # neighbor
         if self.is_route_dependent() :
-            neigbors_costs : interval = self.get_neighbouring_enpoints_consumption()
+            neigbors_costs : dict[str, interval] = self.get_neighbouring_endpoints_consumption()
             print("neighbors costs : ", neigbors_costs)
-            total_cost : interval = local_cost + neigbors_costs
+            total_cost : interval = local_cost + sum(neigbors_costs.keys()) # TODO : Average ??
             print("total cost : ", total_cost)
             return total_cost
         
@@ -126,7 +130,7 @@ class EnergyMonitorRoute(object) :
     
     
     
-    def process_arguments(self, objective : float, arguments : list[float]):
+    def process_arguments(self, objective : float, arguments : list[float]) -> tuple[dict[str, int], list[float]]:
         """process_arguments
 
         Args:
@@ -135,52 +139,48 @@ class EnergyMonitorRoute(object) :
         """
 
         if objective < 0:
-            logging.warn(f"{self._name} has not objective defined.")
+            logging.warn(f"{self.rule} has not objective defined.")
             pass
-        logging.info(f"{self._name} has an objective of {objective}")
+        logging.info(f"{self.rule} has an objective of {objective}")
 
-        endpoints = self.get_neighbouring_enpoints_consumption() # TODO : coder
+        endpoints = self.get_neighbouring_endpoints_consumption() # TODO : coder
 
-        if self._filter.count > self._threshold :
-            pass
+        if self.__filter.count > self.__threshold :
+            self.distribute_objective(objective, endpoints)
         else:
             pass
     # def process_arguments(self, objective : float, arguments: list[float])
 
 
 
-    def distribute_objective(objective : float, endpoints_costs : dict[str, interval]):
-        # TODO
+    def distribute_objective(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
+        minimal_costs = mckp.closest_path(endpoints_costs, objective)
+        distributed = sum(minimal_costs.values())
+
+        
         pass
     # def distribute_objective(objective : float, endpoints_costs : dict[str, interval])
 
 
 
-    def get_neighbouring_enpoints_consumption(self) -> interval :
+    def get_neighbouring_endpoints_consumption(self) -> dict[str, interval] :
         """Returns a map containing the consumption of all neighbouring endpoints, keyed by their rule 
 
         Returns:
             dict[str, interval]: a map { rule -> consumption interval }
         """
-        neighbouring_endpoints_consumption_intervals : list[interval] = list()
-        
-        for neighbor_app in self.__depends_on :
-            neighbouring_endpoints_consumption_intervals.append(
-                neighbor_app.request_energy_monitoring()
-            )
-        
-        return sum(neighbouring_endpoints_consumption_intervals)
+        return {neighbor.get_name() : neighbor.request_energy_monitoring() for neighbor in self.__depends_on}
     # def get_neighbouring_enpoints_consumption() -> dict[str, interval]
     
     
     
-    def get_treshold(self) -> float :
+    def get_threshold(self) -> float :
         """get_treshold
 
         Returns:
             float: _description_
         """
-        return self.__treshold
+        return self.__threshold
     # def get_treshold(self) -> float
     
     

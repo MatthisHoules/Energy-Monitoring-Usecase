@@ -114,17 +114,16 @@ class EnergyMonitorApp(object) :
             @wraps(f)
             def route_function_wrapper(**endpoint_function_args):
                 # get user energy objective
-                user_cost_target : int = self.__get_user_energy_objective()
+                user_cost_target : int | None = self.__get_user_energy_objective()
+                args = endpoint_function_args
                 
-                if user_cost_target is None :
-                    response = f(**endpoint_function_args)
-                    return response
+                if user_cost_target is not None :
+                    (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target, **args)
                 
                 # TODO Treshold >< MCKP ...
                 # TODO MAIN
-                self.monitored_routes[rule].get_route_cost()
                  
-                response = self.monitored_routes[rule].monitor_function_call(f, **endpoint_function_args)
+                response = self.monitored_routes[rule].monitor_function_call(f, **args)
 
                 return response
 
@@ -157,7 +156,7 @@ class EnergyMonitorApp(object) :
         with c :
             for _, route in self.monitored_routes.items() :
                 for args in route.get_params_combinations() :
-                    for _ in range(route.get_treshold()) :
+                    for _ in range(route.get_threshold()) :
                         c.get(route.parse_rule_with_args(**args))
     # def monitor_energy_routes(self)
     
@@ -207,11 +206,11 @@ class EnergyMonitorApp(object) :
     
     
     
-    def __get_user_energy_objective(self) -> int : 
-        user_cost_target : int = request.headers.get('x-user-energy-objective', None)
+    def __get_user_energy_objective(self) -> int | None: 
+        user_cost_target : int | None = request.headers.get('x-user-energy-objective', None)
         
         if user_cost_target is None : 
-            return 100
+            return None
         
         if user_cost_target < 10 :
             user_cost_target = 10
