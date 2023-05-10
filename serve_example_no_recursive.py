@@ -21,15 +21,16 @@ app = EnergyMonitorApp(
 )
 
 @app.route("/fibo/<int:n>/<int:i>", methods=["GET"], monitored_params={
-    "n" : [5, 15],
+    "n" : [5, 20],
     "i" : [5, 10]
 })
 def fibo(n : int, i : int):
+    result = 0
     for _ in range(i) :
-        ct = fibonacci(n)
+        result += fibonacci(n)
     
     response = app.app.response_class(
-        response=json.dumps({f"Fibanicci, n={n}:" :  ct}),
+        response=json.dumps({f"Fibanicci, n={n} and i={i}:" :  result}),
         status=200,
         mimetype='application/json'
     )
