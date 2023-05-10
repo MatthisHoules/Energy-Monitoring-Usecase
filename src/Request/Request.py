@@ -12,7 +12,7 @@ class EnergyMonitoringRequests(object) :
     
     
     
-    def get(url) -> Response :
+    def get(url, headers : dict[str, str]= {}) -> Response :
         """_summary_
 
         Args:
@@ -21,7 +21,10 @@ class EnergyMonitoringRequests(object) :
         Returns:
             Response: _description_
         """
-        headers = request.headers
+        headers = headers.copy()
+        objective = request.g.objectives.get(url)
+        if objective is not None:
+            headers['x-user-energy-objective'] = objective
         response = requests.get(url, headers=headers)
         
         return response
