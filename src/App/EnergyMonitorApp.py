@@ -66,6 +66,8 @@ class EnergyMonitorApp(object) :
                 )
                 return response
             
+
+            print('starting computing cost of {rule}')
             # here total_cost is only local cost
             total_cost : interval = route.get_route_cost()
             
@@ -118,7 +120,7 @@ class EnergyMonitorApp(object) :
                 args = endpoint_function_args
                 
                 if user_cost_target is not None :
-                    (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target, **args)
+                    (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target)
                 
                 # TODO Treshold >< MCKP ...
                 # TODO MAIN
@@ -212,6 +214,7 @@ class EnergyMonitorApp(object) :
         if user_cost_target is None : 
             return None
         
+        user_cost_target = int(user_cost_target)
         if user_cost_target < 10 :
             user_cost_target = 10
         elif user_cost_target > 100 : 

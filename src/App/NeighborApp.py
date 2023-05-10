@@ -62,7 +62,7 @@ class NeighborApp(object) :
         
         rules_intervals : list[interval] = list()
         for rule in self.__endpoint_rules :
-            print('computing rule', rule)
+            print(f'computing {self.__host}:{self.__port}{rule}')
             response_interval_data = EnergyMonitoringRequests.get(
                 f"http://{self.__host}:{self.__port}/energy_monitoring?rule={self.__rule_url_encode(rule)}"
             ).json()

@@ -7,4 +7,5 @@ eventlet
 httpx
 bloompy
 pyinterval
-sklearn
+scikit-learn
+pyyaml

@@ -132,7 +132,7 @@ class EnergyMonitorRoute(object) :
     
     
     
-    def process_arguments(self, objective : float, arguments : list[float]) -> tuple[dict[str, int], list[float]]:
+    def process_arguments(self, objective : float) -> tuple[dict[str, int], list[float]]:
         """process_arguments
 
         Args:
@@ -158,8 +158,7 @@ class EnergyMonitorRoute(object) :
     def distribute_objective(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
         minimal_costs = mckp.closest_path(endpoints_costs, objective)
         distributed = sum(minimal_costs.values())
-
-        
+        print(distributed)
         pass
     # def distribute_objective(objective : float, endpoints_costs : dict[str, interval])
 

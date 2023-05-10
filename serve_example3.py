@@ -23,7 +23,7 @@ app = EnergyMonitorApp(
 
 
 @app.route("/fibo/<int:n>/<int:i>", methods=["GET"], monitored_params={
-    "n" : [5, 20],
+    "n" : [5, 10],
     "i" : [5, 20]
 }, depends_on = {
     "t4" : ["/fibo/<int:n>/<int:i>"],
