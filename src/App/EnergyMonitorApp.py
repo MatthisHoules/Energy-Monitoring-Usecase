@@ -120,9 +120,13 @@ class EnergyMonitorApp(object) :
                 args = endpoint_function_args
                 
                 if user_cost_target is not None :
-                    (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target)
-                    print(f"endpoints : {endpoints_costs}, args : {args}")
-                
+                    available = request.headers.get('x-user-energy-available', None)
+                    if available is not None:
+                        available = int(available)
+
+                    (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target, available)
+                    
+                    g.endpoints = endpoints_costs.copy()
                 # TODO Treshold >< MCKP ...
                 # TODO MAIN
                  

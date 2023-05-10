@@ -1,5 +1,5 @@
 # External Imports
-from flask import request, Response
+from flask import g, Response
 import requests
 
 # TODO Documentation
@@ -21,7 +21,10 @@ class EnergyMonitoringRequests(object) :
         Returns:
             Response: _description_
         """
-        headers = request.headers
+        headers = {}
+        if g is not None and hasattr(g, 'endpoints'):
+            headers = g.endpoints.get(url, {})
+        
         response = requests.get(url, headers=headers)
         
         return response
