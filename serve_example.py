@@ -1,7 +1,5 @@
 # External Imports
 import json
-from flask import Flask
-from flask_cors import CORS
 
 
 # Internal Imports
@@ -21,8 +19,6 @@ app = EnergyMonitorApp(
     "t1",
     "config.json"
 )
-CORS(app)
-
 
 @app.route("/fibo/<int:n>/<int:i>", methods=["GET"], monitored_params={
     "n" : [5, 10],
