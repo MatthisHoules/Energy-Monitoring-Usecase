@@ -1,6 +1,5 @@
 # External Imports
 import json
-from flask import jsonify, make_response
 
 
 # Internal Imports
@@ -16,21 +15,26 @@ def fibonacci(n):
 
 app = EnergyMonitorApp(
     "0.0.0.0",
-    8084,
-    "t5",
+    8080,
+    "t1",
     "config.json"
 )
 
-
 @app.route("/fibo/<int:n>/<int:i>", methods=["GET"], monitored_params={
-    "n" : [5, 10],
-    "i" : [5, 20]
+    "n" : [5, 15],
+    "i" : [5, 10]
+}, depends_on = {
+    "t2" : ["/fibo/<int:n>/<int:i>"]
 })
 def fibo(n : int, i : int):
     for _ in range(i) :
         ct = fibonacci(n)
     
-    response = make_response(jsonify({f"Fibanicci, n={n}:" :  ct}), 200)
+    response = app.app.response_class(
+        response=json.dumps({f"Fibanicci, n={n}:" :  ct}),
+        status=200,
+        mimetype='application/json'
+    )
     
     return response
 # def fibo(n : int, i : int)
