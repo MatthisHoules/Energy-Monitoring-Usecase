@@ -1,7 +1,11 @@
 flask
 pymongo
 requests
-env 
+env
 python-dotenv
 eventlet
 httpx
+bloompy
+pyinterval
+scikit-learn
+pyyaml
