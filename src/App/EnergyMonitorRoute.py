@@ -139,7 +139,7 @@ class EnergyMonitorRoute(object) :
             pass 
         print(f"{self.rule} has an objective of {objective}, with an availability of {available}")
 
-        endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='/')
+        endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='_')
         endpoints[self.rule] = self.__local_energy_data.get_cost_interval()
 
         distributed = self.distribute_objective(objective / 100, endpoints, available)
@@ -152,20 +152,18 @@ class EnergyMonitorRoute(object) :
         (min_cost, max_cost) = interval_helper.intervals_bounds(endpoints_costs.values())
 
         if target is None:
-            target = max_cost * objective
-
+            target = round(max_cost * objective)
+            
         if target <= min_cost:
             return {k: interval_helper.interval_min(v) for k, v in endpoints_costs.items()}
 
         surplus = target - min_cost
         given_costs = {}
         for endpoint_name, costs in endpoints_costs.items():
-            given = interval_helper.interval_min(costs) + surplus * objective * interval_helper.interval_max(costs) / max_cost
+            given = interval_helper.interval_min(costs) + surplus * interval_helper.interval_max(costs) / max_cost
             given_costs[endpoint_name] = int(given)
-        
-        print(f"\n target : {target}, given {sum(given_costs.values())} \n Repartition : {given_costs}")
         return given_costs
-
+    
     def distribute_objective_mckp(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
         
         minimal_costs = mckp.closest_path(endpoints_costs, objective)
@@ -190,7 +188,7 @@ class EnergyMonitorRoute(object) :
         
         result_dict : dict[str, dict[str, interval]] = dict()
         for neighbor in self.__depends_on :
-            result_dict[neighbor.get_base_url()] = neighbor.request_energy_monitoring()
+            result_dict[neighbor.get_name()] = neighbor.request_energy_monitoring()
             
         return result_dict
     # def get_neighbouring_enpoints_consumption() -> dict[str, interval]

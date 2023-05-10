@@ -37,9 +37,6 @@ class NeighborApp(object) :
     
     def get_name(self) -> str :
         return self.__name
-    
-    def get_base_url(self) -> str :
-        return self.__host + self.__port
     # def get_name(self) -> str
 
 
