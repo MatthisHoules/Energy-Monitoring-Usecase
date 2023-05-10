@@ -9,3 +9,4 @@ bloompy
 pyinterval
 scikit-learn
 pyyaml
+pandas

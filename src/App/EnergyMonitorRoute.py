@@ -2,7 +2,7 @@
 import itertools
 from bloompy import CountingBloomFilter
 from joulehunter import Profiler
-from interval import interval
+from interval import interval, fpu
 from flask import request
 import logging
 
@@ -34,7 +34,7 @@ class EnergyMonitorRoute(object) :
         self.rule : str = rule
         self.monitored_params : dict = monitored_params
         self.__threshold : int = threshold
-        self.__local_energy_data : LocalEnergyData = LocalEnergyData(self.__threshold, len(monitored_params))        
+        self.__local_energy_data : LocalEnergyData = LocalEnergyData(self.__threshold, len(monitored_params), monitored_params.keys())        
         self.__depends_on : list[NeighborApp] = depends_on
         self.__filter : CountingBloomFilter = CountingBloomFilter
 
@@ -116,15 +116,11 @@ class EnergyMonitorRoute(object) :
     
     
     def get_route_cost(self) -> interval :
-        print("\n"*5, "RULE : ", self.rule)
         local_cost : interval = self.get_local_energy_data().get_cost_interval()
-        print("local cost : ", local_cost)
         # neighbor
         if self.is_route_dependent() :
             neigbors_costs : dict[str, interval] = self.get_neighbouring_endpoints_consumption()
-            print("neighbors costs : ", neigbors_costs)
             total_cost : interval = local_cost + sum(neigbors_costs.values()) # TODO : Average ??
-            print("total cost : ", total_cost)
             return total_cost
         
         return local_cost
@@ -142,20 +138,21 @@ class EnergyMonitorRoute(object) :
 
         if objective < 0:
             logging.warn(f"{self.rule} has not objective defined.")
-            pass
+            pass 
         logging.info(f"{self.rule} has an objective of {objective}")
 
         endpoints = self.get_neighbouring_endpoints_consumption() # TODO : coder
         endpoints[self.rule] = self.__local_energy_data.get_cost_interval()
-        costs = self.distribute_objective(objective, endpoints)
-        print(costs)
+
+        m = sum([max(i.extrema)[1] for i in endpoints.values()])
+    
+        costs = self.distribute_objective(int(m * objective / 100), endpoints)
         return (endpoints, self.__local_energy_data.predict_args_from_cost(costs[self.rule]))
     # def process_arguments(self, objective : float, arguments: list[float])
 
 
 
     def distribute_objective(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
-        print(f"obj : {objective}, costs : {endpoints_costs}")
         minimal_costs = mckp.closest_path(endpoints_costs, objective)
         distributed = sum(minimal_costs.values())
         print(f"distributed {distributed} out of {objective}")
