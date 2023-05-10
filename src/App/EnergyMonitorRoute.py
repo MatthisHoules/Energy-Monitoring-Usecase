@@ -12,7 +12,8 @@ from .NeighborApp import NeighborApp
 from . import mckp
       
 
-
+# TODO Documentation
+# TODO remove prints
 class EnergyMonitorRoute(object) :
     """_summary_
 
@@ -113,6 +114,7 @@ class EnergyMonitorRoute(object) :
     # def monitor_function_call(self, function, **args)  
     
     
+    
     def get_route_cost(self) -> interval :
         print("\n"*5, "RULE : ", self.rule)
         local_cost : interval = self.get_local_energy_data().get_cost_interval()
@@ -169,7 +171,9 @@ class EnergyMonitorRoute(object) :
         Returns:
             dict[str, interval]: a map { rule -> consumption interval }
         """
-        return {neighbor.get_name() : neighbor.request_energy_monitoring() for neighbor in self.__depends_on}
+        return {
+            neighbor.get_name() : neighbor.request_energy_monitoring() for neighbor in self.__depends_on
+        }
     # def get_neighbouring_enpoints_consumption() -> dict[str, interval]
     
     

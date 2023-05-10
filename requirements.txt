@@ -1,7 +1,7 @@
 flask
 pymongo
 requests
-env 
+env
 python-dotenv
 eventlet
 httpx

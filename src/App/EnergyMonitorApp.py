@@ -12,12 +12,12 @@ from .EnergyMonitorRoute import EnergyMonitorRoute
 from .NeighborApp import NeighborApp
 
 
-
+# TODO remove prints
+# TODO Documentation
 class EnergyMonitorApp(object) :
     """_summary_
 
     """
-    
     
     def __init__(self, host : str, port : int, name : str, depends_microservices_config_env_filepath : str) -> None:
         """_summary_

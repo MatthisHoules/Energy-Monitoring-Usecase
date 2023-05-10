@@ -10,14 +10,13 @@ from ..Request.Request import EnergyMonitoringRequests
 
 
 # TODO remove prints
+# TODO Documentation
 class NeighborApp(object) :
     """_summary_
 
     Args:
         object (_type_): _description_
     """
-    
-
 
     def __init__(self, name : str, host : str, port : int, endpoint_rules : list[str]) -> None :
         """_summary_
@@ -35,9 +34,11 @@ class NeighborApp(object) :
     # def __init__(self, host : str, port : int) -> None
     
     
+    
     def get_name(self) -> str :
         return self.__name
     # def get_name(self) -> str
+
 
     
     def __rule_url_encode(self, rule : str) -> str:

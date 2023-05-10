@@ -3,12 +3,14 @@ from functools import reduce
 from interval import interval
 from sklearn.neighbors import KNeighborsRegressor
 import yaml
+import numpy as np
 
 
 
-# TODO SKLEARN KNN
+# TODO SKLEARN KNN --> retrain to test, predict TODO
 # TODO Refacto : LocalEnergyData in EnergyMonitoringRoute ?
 # TODO remove prints
+# TODO Documentation
 class LocalEnergyData(object):
     """Caching of latest recorded consumption for a single endpoint
     """
@@ -103,7 +105,6 @@ class LocalEnergyData(object):
                     (cost, key_dict)
                 )
                 self.__retrain_knn_model()
-            
         else :
             self.__args_costs[key] = [cost]
     # def add_arg_cost(self, key : str, cost : float) -> None
@@ -114,14 +115,24 @@ class LocalEnergyData(object):
         """_summary_
         """
         
+        
         cost, args = zip(*self.__cost_to_args)
 
         self.__knn_model = KNeighborsRegressor(n_neighbors=self.__n_monitored_args, weights="distance")
         self.__knn_model.fit(
-            cost,
+            np.array(cost).reshape(-1, 1),
             args
         )
     # def __retrain_knn_model(self) -> None
     
     
+    
+    def predict_args_from_cost(self, cost : int) -> dict[str, int] :
+        # TODO : DISTANCE WITH POINT (if cost already in --> return params) else predict
+        
+        predictions : dict[str, float] = self.__knn_model.predict([[cost]])
+        # TODO Verify good type for predictions var
+        # TODO predictions to dict[str, int]
+        pass
+    # def predict_args_from_cost(self, cost : int) -> dict[str, int] 
 # class LocalEnergyData(object)
