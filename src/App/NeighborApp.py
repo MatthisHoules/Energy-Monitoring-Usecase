@@ -53,28 +53,23 @@ class NeighborApp(object) :
     
     
     
-    def request_energy_monitoring(self) -> interval :
+    def request_energy_monitoring(self) -> dict[str, interval] :
         """_summary_
 
         Returns:
             dict[str, int]: _description_
         """
         
-        rules_intervals : list[interval] = list()
+        rules_intervals : dict[str, interval] = dict()
         for rule in self.__endpoint_rules :
             print(f'computing {self.__host}:{self.__port}{rule}')
             response_interval_data = EnergyMonitoringRequests.get(
                 f"http://{self.__host}:{self.__port}/energy_monitoring?rule={self.__rule_url_encode(rule)}"
             ).json()
             
-            print("rule result : ", interval(*response_interval_data))
-                        
-            rules_intervals.append(
-                interval(*response_interval_data)
-            )
-
-        print("all intervals : ", rules_intervals)
-        return sum(rules_intervals)
+            rules_intervals[rule] = interval(*response_interval_data)
+            
+        return rules_intervals
     # def request_energy_monitoring(self) -> dict[str, interval]
 # class NeighborApp(object)  
  

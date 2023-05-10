@@ -5,6 +5,7 @@ from joulehunter import Profiler
 from interval import interval, fpu
 from flask import request
 import logging
+from pandas.io.json._normalize import nested_to_record    
 
 # Internal Imports
 from .LocalEnergyData import LocalEnergyData
@@ -36,8 +37,6 @@ class EnergyMonitorRoute(object) :
         self.__threshold : int = threshold
         self.__local_energy_data : LocalEnergyData = LocalEnergyData(self.__threshold, len(monitored_params), monitored_params.keys())        
         self.__depends_on : list[NeighborApp] = depends_on
-        self.__filter : CountingBloomFilter = CountingBloomFilter
-
     # def __init__(self, endpoint : str, rule : str, monitored_params : dict)
     
     
@@ -119,8 +118,8 @@ class EnergyMonitorRoute(object) :
         local_cost : interval = self.get_local_energy_data().get_cost_interval()
         # neighbor
         if self.is_route_dependent() :
-            neigbors_costs : dict[str, interval] = self.get_neighbouring_endpoints_consumption()
-            total_cost : interval = local_cost + sum(neigbors_costs.values()) # TODO : Average ??
+            neigbors_costs : dict[str, interval] = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='_')
+            total_cost : interval = local_cost + sum(neigbors_costs.values())
             return total_cost
         
         return local_cost
@@ -141,9 +140,9 @@ class EnergyMonitorRoute(object) :
             pass 
         logging.info(f"{self.rule} has an objective of {objective}")
 
-        endpoints = self.get_neighbouring_endpoints_consumption() # TODO : coder
+        endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='_')
         endpoints[self.rule] = self.__local_energy_data.get_cost_interval()
-
+        
         m = sum([max(i.extrema)[1] for i in endpoints.values()])
     
         costs = self.distribute_objective(int(m * objective / 100), endpoints)
@@ -153,6 +152,7 @@ class EnergyMonitorRoute(object) :
 
 
     def distribute_objective(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
+        
         minimal_costs = mckp.closest_path(endpoints_costs, objective)
         distributed = sum(minimal_costs.values())
         print(f"distributed {distributed} out of {objective}")
@@ -161,15 +161,18 @@ class EnergyMonitorRoute(object) :
 
 
 
-    def get_neighbouring_endpoints_consumption(self) -> dict[str, interval] :
+    def get_neighbouring_endpoints_consumption(self) -> dict[str, dict[str, interval]] :
         """Returns a map containing the consumption of all neighbouring endpoints, keyed by their rule 
 
         Returns:
             dict[str, interval]: a map { rule -> consumption interval }
         """
-        return {
-            neighbor.get_name() : neighbor.request_energy_monitoring() for neighbor in self.__depends_on
-        }
+        
+        result_dict : dict[str, dict[str, interval]] = dict()
+        for neighbor in self.__depends_on :
+            result_dict[neighbor.get_name()] = neighbor.request_energy_monitoring()
+            
+        return result_dict
     # def get_neighbouring_enpoints_consumption() -> dict[str, interval]
     
     

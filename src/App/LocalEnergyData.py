@@ -29,7 +29,7 @@ class LocalEnergyData(object):
         self.__n_monitored_args : int = n_monitored_args
         self.__knn_model : KNeighborsRegressor = KNeighborsRegressor(weights="distance")
     # def __init__(self) -> None
-
+ 
 
 
     def contains_args(self, key : str) -> bool :
@@ -101,6 +101,7 @@ class LocalEnergyData(object):
             self.__args_costs[key].append(cost)
             print(f"\n{key} testé {len(self.__args_costs[key])} fois\n")
             if len(self.__args_costs[key]) == self.__treshold :
+                print("treshold")
                 key_dict : dict = yaml.load(key, Loader=yaml.FullLoader)
                 self.__cost_to_args.append(
                     (cost, key_dict)
@@ -116,11 +117,14 @@ class LocalEnergyData(object):
         """_summary_
         """
         
+        print("\n" * 5)
+        print(f"retraining KNN model")
+        print("params : ", self.__cost_to_args)
         
         cost, args = zip(*self.__cost_to_args)
+        
 
         self.__knn_model = KNeighborsRegressor(n_neighbors=self.__n_monitored_args, weights="distance")
-        
         self.__knn_model.fit(
             np.array(cost).reshape(-1, 1),
             pd.DataFrame(args)
