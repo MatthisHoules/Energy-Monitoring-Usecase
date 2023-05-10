@@ -1,6 +1,7 @@
 # External Imports
 import json
 
+from src.Request.Request import EnergyMonitoringRequests
 
 # Internal Imports
 from src.App.EnergyMonitorApp import EnergyMonitorApp
@@ -31,12 +32,15 @@ def fibo(n : int, i : int):
     for _ in range(i) :
         ct = fibonacci(n)
     
+    EnergyMonitoringRequests.get(
+                f"http://0.0.0.0:8081/fibo/{n}/{i}"
+            )
+    
     response = app.app.response_class(
         response=json.dumps({f"Fibanicci, n={n}:" :  ct}),
         status=200,
         mimetype='application/json'
     )
-    
     return response
 # def fibo(n : int, i : int)
 

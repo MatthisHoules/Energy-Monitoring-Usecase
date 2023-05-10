@@ -6,7 +6,7 @@ from eventlet import wsgi
 import httpx
 from functools import wraps
 from interval import interval
-
+import urllib.parse
 # Internal Imports
 from .EnergyMonitorRoute import EnergyMonitorRoute
 from .NeighborApp import NeighborApp
@@ -54,8 +54,6 @@ class EnergyMonitorApp(object) :
         def retreive_monitored_endpoint() :
             """_summary_
             """
-            print('starting computing cost of {rule}')
-            
             rule = request.args.get('rule', default=None)
             route : EnergyMonitorRoute = self.monitored_routes.get(rule, None)
             
@@ -118,18 +116,23 @@ class EnergyMonitorApp(object) :
                 # get user energy objective
                 user_cost_target : int | None = self.__get_user_energy_objective()
                 args = endpoint_function_args
-                
-                if user_cost_target is not None :
-                    available = request.headers.get('x-user-energy-available', None)
+                encoded = urllib.parse.quote(f"{self.__name}_rule")
+                available = request.headers.get(f'X-User-Energy-Available', None)
+                if user_cost_target is not None or available is not None:
                     if available is not None:
-                        available = int(available)
+                        available = json.loads(available)
+                        available = available.get(f"{self.__name}_{rule}", None)
+                        if available is not None: 
+                            available = int(available)
 
+                    if user_cost_target is None:
+                        user_cost_target = 100
                     (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target, available)
                     
-                    g.endpoints = endpoints_costs.copy()
+                    g.endpoints = {'x-user-energy-available': json.dumps(endpoints_costs)}
                 # TODO Treshold >< MCKP ...
-                # TODO MAIN
                  
+                # TODO MAIN
                 response = self.monitored_routes[rule].monitor_function_call(f, **args)
 
                 return response
@@ -183,7 +186,6 @@ class EnergyMonitorApp(object) :
         route_neighbors_apps : list[NeighborApp] = list()
         for neighbor_app_name, neighbor_app_routes in depends_on_endpoints.items() :
             neighbor_app_config = self.__neighbors_app_config.get(neighbor_app_name)
-            print("neighbor route creation : ", neighbor_app_routes)
             route_neighbors_apps.append(
                 NeighborApp(
                     neighbor_app_name,

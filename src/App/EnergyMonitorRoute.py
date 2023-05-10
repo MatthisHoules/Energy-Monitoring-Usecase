@@ -133,12 +133,6 @@ class EnergyMonitorRoute(object) :
             objective (float): _description_
             arguments (list[float]): _description_
         """
-
-        if objective < 0:
-            logging.warn(f"{self.rule} has not objective defined.")
-            pass 
-        print(f"{self.rule} has an objective of {objective}, with an availability of {available}")
-
         endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='_')
         endpoints[self.rule] = self.__local_energy_data.get_cost_interval()
 
@@ -162,6 +156,7 @@ class EnergyMonitorRoute(object) :
         for endpoint_name, costs in endpoints_costs.items():
             given = interval_helper.interval_min(costs) + surplus * interval_helper.interval_max(costs) / max_cost
             given_costs[endpoint_name] = int(given)
+
         return given_costs
     
     def distribute_objective_mckp(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:

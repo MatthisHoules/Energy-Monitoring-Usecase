@@ -23,7 +23,7 @@ class EnergyMonitoringRequests(object) :
         """
         headers = {}
         if g is not None and hasattr(g, 'endpoints'):
-            headers = g.endpoints.get(url, {})
+            headers = g.endpoints
         
         response = requests.get(url, headers=headers)
         

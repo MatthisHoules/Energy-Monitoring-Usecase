@@ -59,11 +59,6 @@ class LocalEnergyData(object):
         for arg_combination in self.__args_costs.keys() :
             avg_cost = self.get_avg_cost_by_args(arg_combination)
             
-            print(arg_combination, interval([
-                    avg_cost - self.__error_cost if avg_cost - self.__error_cost >= 0 else 1,
-                    avg_cost + self.__error_cost
-            ]))
-            
             intervals.append(
                 interval([
                     avg_cost - self.__error_cost if avg_cost - self.__error_cost >= 0 else 1,
@@ -99,9 +94,7 @@ class LocalEnergyData(object):
         
         if self.contains_args(key) :
             self.__args_costs[key].append(cost)
-            print(f"\n{key} testé {len(self.__args_costs[key])} fois\n")
             if len(self.__args_costs[key]) == self.__treshold :
-                print("treshold")
                 key_dict : dict = yaml.load(key, Loader=yaml.FullLoader)
                 self.__cost_to_args.append(
                     (cost, key_dict)
@@ -116,10 +109,6 @@ class LocalEnergyData(object):
     def __retrain_knn_model(self) -> None :
         """_summary_
         """
-        
-        print("\n" * 5)
-        print(f"retraining KNN model")
-        print("params : ", self.__cost_to_args)
         
         cost, args = zip(*self.__cost_to_args)
         
