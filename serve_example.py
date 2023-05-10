@@ -22,11 +22,10 @@ app = EnergyMonitorApp(
 )
 
 @app.route("/fibo/<int:n>/<int:i>", methods=["GET"], monitored_params={
-    "n" : [5, 10],
+    "n" : [5, 15],
     "i" : [5, 10]
 }, depends_on = {
-    "t2" : ["/fibo/<int:n>/<int:i>"],
-    "t3" : ["/fibo/<int:n>/<int:i>"]
+    "t2" : ["/fibo/<int:n>/<int:i>"]
 })
 def fibo(n : int, i : int):
     for _ in range(i) :
