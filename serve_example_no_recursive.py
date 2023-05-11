@@ -21,8 +21,8 @@ app = EnergyMonitorApp(
 )
 
 @app.route("/fibo/<int:n>/<int:i>", methods=["GET"], monitored_params={
-    "n" : [5, 15],
-    "i" : [5, 10]
+    "n" : [5, 10],
+    "i" : [1, 5]
 })
 def fibo(n : int, i : int):
     result = 0
@@ -40,9 +40,9 @@ def fibo(n : int, i : int):
 
 
 
-@app.route("/test/<int:n>", methods=["GET"], monitored_params={
-    "n" : [5, 10]
-})
+# @app.route("/test/<int:n>", methods=["GET"], monitored_params={
+#     "n" : [5, 10]
+# })
 def route2(n : int):
     ct = fibonacci(n)
     
