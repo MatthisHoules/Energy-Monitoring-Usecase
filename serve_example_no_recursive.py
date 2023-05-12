@@ -1,6 +1,6 @@
 # External Imports
 import json
-
+from flask_cors import CORS, cross_origin
 
 # Internal Imports
 from src.App.EnergyMonitorApp import EnergyMonitorApp
@@ -19,18 +19,21 @@ app = EnergyMonitorApp(
     "t1",
     "config.json"
 )
+cors = CORS(app.app)
+app.app.config['CORS_HEADERS'] = 'Content-Type'
 
 @app.route("/fibo/<int:n>/<int:i>", methods=["GET"], monitored_params={
     "n" : [5, 10],
-    "i" : [1, 5]
+    "i" : [1, 30]
 })
+@cross_origin()
 def fibo(n : int, i : int):
     result = 0
     for _ in range(i) :
         result += fibonacci(n)
     
     response = app.app.response_class(
-        response=json.dumps({f"Fibanicci, n={n} and i={i}:" :  result}),
+        response=json.dumps({"value": result, "params" : {"n": n, "i": i}}),
         status=200,
         mimetype='application/json'
     )

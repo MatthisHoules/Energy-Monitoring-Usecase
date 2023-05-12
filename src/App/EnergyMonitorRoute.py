@@ -10,8 +10,7 @@ from functools import reduce
 from .LocalEnergyData import LocalEnergyData
 from .NeighborApp import NeighborApp
 from . import mckp, interval_helper
-      
-
+import pprint
 # TODO Documentation
 # TODO remove prints
 class EnergyMonitorRoute(object) :
@@ -22,7 +21,7 @@ class EnergyMonitorRoute(object) :
     """
     
     
-    def __init__(self, rule : str, monitored_params : dict, depends_on : list[NeighborApp] = [], threshold : int = 50) :
+    def __init__(self, rule : str, monitored_params : dict, depends_on : list[NeighborApp] = [], threshold : int = 20) :
         """_summary_
 
         Args:
@@ -126,27 +125,28 @@ class EnergyMonitorRoute(object) :
     
     
     
-    def process_arguments(self, objective : float, available : int | None) -> tuple[dict[str, int], list[float]]:
+    def process_arguments(self, objective : float | None, available : int | None) -> tuple[dict[str, int], list[float]]:
         """process_arguments
 
         Args:
             objective (float): _description_
             arguments (list[float]): _description_
         """
+        assert objective is not None or available is not None
         endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='_')
         endpoints[self.rule] = self.__local_energy_data.get_cost_interval()
 
-        distributed = self.distribute_objective(objective / 100, endpoints, available)
+        distributed = self.distribute_objective(objective, endpoints, available)
 
         return (distributed, self.__local_energy_data.predict_args_from_cost(distributed[self.rule]))
     # def process_arguments(self, objective : float, arguments: list[float])
 
 
-    def distribute_objective(self, objective : float, endpoints_costs : dict[str, interval], target : int | None) -> dict[str, int]:
+    def distribute_objective(self, objective : float | None, endpoints_costs : dict[str, interval], target : int | None) -> dict[str, int]:
         (min_cost, max_cost) = interval_helper.intervals_bounds(endpoints_costs.values())
 
         if target is None:
-            target = round(max_cost * objective)
+            target = round(max_cost * objective / 100)
             
         if target <= min_cost:
             return {k: interval_helper.interval_min(v) for k, v in endpoints_costs.items()}
@@ -156,7 +156,9 @@ class EnergyMonitorRoute(object) :
         for endpoint_name, costs in endpoints_costs.items():
             given = interval_helper.interval_min(costs) + surplus * interval_helper.interval_max(costs) / max_cost
             given_costs[endpoint_name] = int(given)
-
+            
+        print(f"endpoints costs ", pprint.pformat(endpoints_costs))
+        print(f"distributed available energy to neighbouring endpoints : {pprint.pformat(given_costs)}, \n sum = {sum(given_costs.values())}, \n target = {target}")
         return given_costs
     
     def distribute_objective_mckp(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:

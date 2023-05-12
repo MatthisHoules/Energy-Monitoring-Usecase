@@ -90,7 +90,7 @@ class EnergyMonitorApp(object) :
                 f (_type_): _description_
 
             Returns:
-                _type_: _description_
+                _type_: _description_   
             """
             
             # This rule is reserved for peer to peer energy consumption communication
@@ -116,25 +116,18 @@ class EnergyMonitorApp(object) :
                 # get user energy objective
                 user_cost_target : int | None = self.__get_user_energy_objective()
                 args = endpoint_function_args
-                encoded = urllib.parse.quote(f"{self.__name}_rule")
                 available = request.headers.get(f'X-User-Energy-Available', None)
-                if user_cost_target is not None or available is not None:
-                    if available is not None:
-                        available = json.loads(available)
-                        available = available.get(f"{self.__name}_{rule}", None)
-                        if available is not None: 
-                            available = int(available)
-
-                    if user_cost_target is None:
-                        user_cost_target = 100
-                    (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target, available)
+                if available is not None: 
+                    json_data = json.loads(available)
+                    if not isinstance(json_data, dict):
+                        raise ValueError("the specified header value should be a jsonified dict[str][str]")
+                    available = int(json_data.get(f"{self.__name}_{rule}", None))
                     
+                if user_cost_target is not None or available is not None:
+                    (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target, available)
                     g.endpoints = {'x-user-energy-available': json.dumps(endpoints_costs)}
-                # TODO Treshold >< MCKP ...
-                 
-                # TODO MAIN
+                    
                 response = self.monitored_routes[rule].monitor_function_call(f, **args)
-
                 return response
 
             self.app.add_url_rule(rule, endpoint, route_function_wrapper, **options)

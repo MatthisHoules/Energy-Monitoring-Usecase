@@ -36,7 +36,7 @@ def fibo(n : int, i : int):
             )
     
     response = app.app.response_class(
-        response=json.dumps({f"Fibanicci, n={n}:" :  ct}),
+        response=json.dumps({f"Fibanicci, n={n}, i={i}:" :  ct}),
         status=200,
         mimetype='application/json'
     )
