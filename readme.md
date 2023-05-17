@@ -13,5 +13,5 @@ Will only works on Linux & Intel CPU
 
 ### Launch
 ```cmd
-    python ./serve_example_no_recursive.py
+    sudo python ./serve_example_no_recursive.py
 ```
