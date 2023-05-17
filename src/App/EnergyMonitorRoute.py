@@ -6,29 +6,30 @@ from flask import request
 import logging
 from pandas.io.json._normalize import nested_to_record    
 from functools import reduce
+
+
+
 # Internal Imports
 from .LocalEnergyData import LocalEnergyData
 from .NeighborApp import NeighborApp
 from . import mckp, interval_helper
       
 
-# TODO Documentation
-# TODO remove prints
-class EnergyMonitorRoute(object) :
-    """_summary_
 
-    Args:
-        object (_type_): _description_
+
+class EnergyMonitorRoute(object) :
+    """EnergyMonitorRoute
+
+        Energy monitored route and args tuned EnergyMonitorApp endpoints
     """
     
     
     def __init__(self, rule : str, monitored_params : dict, depends_on : list[NeighborApp] = [], threshold : int = 50) :
-        """_summary_
+        """__init__
 
-        Args:
-            endpoint (str): _description_
-            rule (str): _description_
-            monitored_params (dict): _description_
+        ### params :
+            rule (str): endpoint rule
+            monitored_params (dict): monitored params with their ranges
         """
         
         self.rule : str = rule
@@ -40,11 +41,11 @@ class EnergyMonitorRoute(object) :
     
     
     
-    def parse_rule_with_args(self, **args) :
-        """_summary_
+    def parse_rule_with_args(self, **kwargs) :
+        """parse_rule_with_args
 
         Returns:
-            _type_: _description_
+            **kwargs: route args with their values
         """
 
         split_rule : list = self.rule.split('/')
@@ -60,7 +61,7 @@ class EnergyMonitorRoute(object) :
                 if type_sep_pos != -1 :
                     param_name = param_name[type_sep_pos+1:]
                 
-                parsed_rule.append(str(args.get(param_name)))    
+                parsed_rule.append(str(kwargs.get(param_name)))    
             else :
                 parsed_rule.append(s)
         
@@ -70,10 +71,10 @@ class EnergyMonitorRoute(object) :
     
     
     def get_params_combinations(self) :
-        """_summary_
+        """get_params_combinations
 
         Returns:
-            _type_: _description_
+            Endpoints args combinations (ranges ext)
         """
         
         keys, values = zip(*self.monitored_params.items())
@@ -83,19 +84,18 @@ class EnergyMonitorRoute(object) :
     
     
     def monitor_function_call(self, function, **args):
-        """_summary_
+        """monitor_function_call
 
         Args:
-            function (_type_): _description_
+            function (function): endpoint function to monitor
 
         Returns:
-            _type_: _description_
+            response: response of the monitored endpoint function
         """
         
         profiler : Profiler = Profiler(interval=.0001)
         profiler.start()
 
-        # TODO : Process arguments
         response = function(**args)
 
         profiler.stop()
@@ -130,13 +130,13 @@ class EnergyMonitorRoute(object) :
         """process_arguments
 
         Args:
-            objective (float): _description_
-            arguments (list[float]): _description_
+            objective (float): user consumtion energy consumtion
+            available (int) : available consumtion
         """
 
         if objective < 0:
             logging.warn(f"{self.rule} has not objective defined.")
-            pass 
+            
         print(f"{self.rule} has an objective of {objective}, with an availability of {available}")
 
         endpoints = nested_to_record(self.get_neighbouring_endpoints_consumption(), sep='_')
@@ -148,7 +148,16 @@ class EnergyMonitorRoute(object) :
     # def process_arguments(self, objective : float, arguments: list[float])
 
 
+
     def distribute_objective(self, objective : float, endpoints_costs : dict[str, interval], target : int | None) -> dict[str, int]:
+        """distribute_objective
+
+            Args:
+                objective : user objectibe
+                endpoints_costs : dict[str, interval] : cost of local & neighbors endpoints
+                target : int : target cost defined by parent endpoint
+        """
+
         (min_cost, max_cost) = interval_helper.intervals_bounds(endpoints_costs.values())
 
         if target is None:
@@ -163,9 +172,14 @@ class EnergyMonitorRoute(object) :
             given = interval_helper.interval_min(costs) + surplus * interval_helper.interval_max(costs) / max_cost
             given_costs[endpoint_name] = int(given)
         return given_costs
+    # def distribute_objective(self, objective : float, endpoints_costs : dict[str, interval], target : int | None) -> dict[str, int]
     
+
+
     def distribute_objective_mckp(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]:
-        
+        """
+            mckp function (TBD)
+        """
         minimal_costs = mckp.closest_path(endpoints_costs, objective)
         
         remaining = objective - sum(minimal_costs.values())
@@ -175,7 +189,7 @@ class EnergyMonitorRoute(object) :
             share_amount = remaining / shares
         
         return minimal_costs
-    # def distribute_objective(objective : float, endpoints_costs : dict[str, interval])
+    # def distribute_objective_mckp(self, objective : int, endpoints_costs : dict[str, interval]) -> dict[str, int]
 
 
 
@@ -191,7 +205,7 @@ class EnergyMonitorRoute(object) :
             result_dict[neighbor.get_name()] = neighbor.request_energy_monitoring()
             
         return result_dict
-    # def get_neighbouring_enpoints_consumption() -> dict[str, interval]
+    # def get_neighbouring_endpoints_consumption(self) -> dict[str, dict[str, interval]] 
     
     
     
@@ -199,7 +213,7 @@ class EnergyMonitorRoute(object) :
         """get_treshold
 
         Returns:
-            float: _description_
+            float: treshold value
         """
         return self.__threshold
     # def get_treshold(self) -> float
@@ -207,12 +221,20 @@ class EnergyMonitorRoute(object) :
     
     
     def is_route_dependent(self) -> bool :
+        """is_route_dependent
+
+            Returns True if the endpoint is dependent. Returns False instead
+        """
         return len(self.__depends_on) > 0
     # def is_route_dependent(self) -> bool
     
     
     
     def get_local_energy_data(self) -> LocalEnergyData :
+        """get_local_energy_data
+
+            Getter of __local_energy_data attribute
+        """
         return self.__local_energy_data
     # def get_local_energy_data(self) -> LocalEnergyData
 # class EnergyMonitorRoute(object)
