@@ -4,22 +4,17 @@ import requests
 
 # TODO Documentation
 class EnergyMonitoringRequests(object) :
-    """_summary_
-
-    Args:
-        object (_type_): _description_
+    """EnergyMonitoringRequests
     """
     
-    
-    
     def get(url) -> Response :
-        """_summary_
+        """get
 
         Args:
-            url (_type_): _description_
+            url (str): url to request
 
         Returns:
-            Response: _description_
+            Response: the response of the get url HTTP request
         """
         headers = {}
         if g is not None and hasattr(g, 'endpoints'):
