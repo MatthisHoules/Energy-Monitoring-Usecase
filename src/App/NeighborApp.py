@@ -4,27 +4,25 @@ import urllib.parse
 from requests import Response
 from interval import interval
 
-
 # Internal Imports
 from ..Request.Request import EnergyMonitoringRequests
 
 
-# TODO remove prints
-# TODO Documentation
-class NeighborApp(object) :
-    """_summary_
 
-    Args:
-        object (_type_): _description_
+class NeighborApp(object) :
+    """NeighborApp
+
+        Neighbor app of a EnergyMonitorRoute
     """
 
     def __init__(self, name : str, host : str, port : int, endpoint_rules : list[str]) -> None :
-        """_summary_
+        """__init__
 
         Args:
-            host (str): _description_
-            port (int): _description_
-            endpoint_rules (list[str]) : _description_
+            name (str): name of the neighbor app
+            host (str): host of the neighbor app
+            port (int): port of the neighbor app
+            endpoint_rules (list[str]) : rules of the neighbor app
         """
         
         self.__name : str = name
@@ -36,16 +34,20 @@ class NeighborApp(object) :
     
     
     def get_name(self) -> str :
+        """get_name
+
+            Getter of the neighbor app name attribute
+        """
+        
         return self.__name
     # def get_name(self) -> str
 
 
     
     def __rule_url_encode(self, rule : str) -> str:
-        """_summary_
+        """__rule_url_encode
 
-        Args:
-            rule (str): _description_
+            Getter of the rule but url encoded
         """
         
         return urllib.parse.quote(rule)
@@ -54,10 +56,9 @@ class NeighborApp(object) :
     
     
     def request_energy_monitoring(self) -> dict[str, interval] :
-        """_summary_
+        """request_energy_monitoring
 
-        Returns:
-            dict[str, int]: _description_
+            Request the energy consumtion of the neighbor app endpoints
         """
         
         rules_intervals : dict[str, interval] = dict()
