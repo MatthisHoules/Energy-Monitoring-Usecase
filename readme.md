@@ -1,4 +1,4 @@
-# Adaptive microservices according to the user's desired consumption
+# Adaptive microservices according to the user's desired energy consumption
 
 ### Installation
 Python 3.10 or Higher is required.
