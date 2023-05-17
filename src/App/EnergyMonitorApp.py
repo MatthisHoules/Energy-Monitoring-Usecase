@@ -12,15 +12,23 @@ from .EnergyMonitorRoute import EnergyMonitorRoute
 from .NeighborApp import NeighborApp
 
 
-# TODO remove prints
-# TODO Documentation
-class EnergyMonitorApp(object) :
-    """_summary_
 
+class EnergyMonitorApp(object) :
+    """  ## EnergyMonitorApp
+        
+        Wrapper of Flask App object :
+            Add a route "/energy_monitoring" that can communicate cost of their energy monitored endpoints
+            Intercept calls in order to adjust endpoints parameters to respect user energy consumption objective
     """
     
     def __init__(self, host : str, port : int, name : str, depends_microservices_config_env_filepath : str) -> None:
-        """_summary_
+        """ ## __init__
+
+            ### params :
+                host : str : host on which the flask api will run
+                port : int : port on which the flask api will run
+                name : str : name of the flask api
+                depends_microservices_config_env_filepath : str : path of the configuration file of depending microservices
         """
         
         self.__host : str = host
@@ -38,7 +46,10 @@ class EnergyMonitorApp(object) :
     
     
     def get_app(self) :
-        """_summary_
+        """get_app
+
+            ### return :
+                Flask app object
         """
         
         return self.app
@@ -47,14 +58,15 @@ class EnergyMonitorApp(object) :
 
 
     def __add_monitoring_endpoint(self) -> None :
-        """_summary_
+        """__add_monitoring_endpoint
+    
+            This function allows to add the energy_monitoring route that returns the energy consumption of a given endpoint
         """
         
         @self.app.route("/energy_monitoring")
         def retreive_monitored_endpoint() :
-            """_summary_
+            """retreive_monitored_endpoint
             """
-            print('starting computing cost of {rule}')
             
             rule = request.args.get('rule', default=None)
             route : EnergyMonitorRoute = self.monitored_routes.get(rule, None)
@@ -79,20 +91,20 @@ class EnergyMonitorApp(object) :
     
     
     def route(self, rule, **options) :
-        """_summary_
+        """route
 
         Args:
-            rule (str): _description_
+            rule (str): rule pattern to add in the app
         """
         
         def register_route_in_app(f):
-            """_summary_
+            """register_route_in_app
 
             Args:
-                f (_type_): _description_
+                f (function): endpoint function
 
             Returns:
-                _type_: _description_
+                function: function wrap with energy monitoring & args tuning components
             """
             
             # This rule is reserved for peer to peer energy consumption communication
@@ -127,8 +139,6 @@ class EnergyMonitorApp(object) :
                     (endpoints_costs, args) = self.monitored_routes[rule].process_arguments(user_cost_target, available)
                     
                     g.endpoints = endpoints_costs.copy()
-                # TODO Treshold >< MCKP ...
-                # TODO MAIN
                  
                 response = self.monitored_routes[rule].monitor_function_call(f, **args)
 
@@ -143,10 +153,10 @@ class EnergyMonitorApp(object) :
     
     
     def __add_monitoring_route(self, energy_monitored_route : EnergyMonitorRoute) :
-        """_summary_
+        """__add_monitoring_route
 
         Args:
-            energy_monitored_route (EnergyMonitorRoute): _description_
+            energy_monitored_route (EnergyMonitorRoute): monitored route
         """
         
         self.monitored_routes[energy_monitored_route.rule] = energy_monitored_route
@@ -155,9 +165,11 @@ class EnergyMonitorApp(object) :
 
 
     def monitor_energy_routes(self) :
-        """_summary_
+        """monitor_energy_routes
+
+            Get energy consumption informations of each interval in order to avoid cold starts 
         """
-        # TODO IGNORE DEPENDS_ON CALLS
+
         c = httpx.Client(app=self.app, base_url="http://monitoring_routes")
         
         with c :
@@ -170,10 +182,10 @@ class EnergyMonitorApp(object) :
     
     
     def __retreive_route_neighbors_endpoints(self, depends_on_endpoints : dict[str, list[str]]) -> list[NeighborApp] :
-        """_summary_
+        """__retreive_route_neighbors_endpoints
 
         Args:
-            depends_on_endpoints (dict[str, list[str]]): _description_
+            depends_on_endpoints (dict[str, list[str]]): endpoints that depents of a route
 
         Returns:
             list[NeighborApp]: _description_
@@ -199,7 +211,9 @@ class EnergyMonitorApp(object) :
     
 
     def run(self) -> None:
-        """_summary_
+        """run
+
+            Run the Flask app wiht a wsgi server
         """
 
         self.monitor_energy_routes()
